@@ -14,6 +14,7 @@ import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
     FacePassHandler mFacePassHandler;
+    
     private static final String CHANNEL = "channelname";
 
     @Override
