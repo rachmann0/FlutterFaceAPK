@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FacePass Demo',
+      title: 'FacePass',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -34,12 +34,16 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  var channel = const MethodChannel("facepass");
-  void _incrementCounter() {
-    channel
-        .invokeMethod('logtest')
-        .then((result) => print(result))
-        .catchError((error) => print("!!!!!!!!!!!!ERROR!!!!!!!!!!!!"));
+  var channel = const MethodChannel("com.facepass/channel");
+
+  void _incrementCounter() async {
+    try {
+      final response = Map<String, dynamic>.from(
+          await channel.invokeMethod('connect', {"deviceId": 123}));
+      print(response);
+    } catch (error) {
+      print(error);
+    }
 
     setState(() {
       _counter++;

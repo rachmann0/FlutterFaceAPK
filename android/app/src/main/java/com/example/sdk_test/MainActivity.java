@@ -5,12 +5,29 @@ import io.flutter.embedding.android.FlutterActivity;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
-import mcv.facepass.FacePassHandler;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
+
+import mcv.facepass.FacePassException;
+import mcv.facepass.FacePassHandler;
+import mcv.facepass.types.FacePassAddFaceResult;
+import mcv.facepass.types.FacePassConfig;
+import mcv.facepass.types.FacePassDetectionResult;
+import mcv.facepass.types.FacePassFace;
+import mcv.facepass.types.FacePassGroupSyncDetail;
+import mcv.facepass.types.FacePassImage;
+import mcv.facepass.types.FacePassImageRotation;
+import mcv.facepass.types.FacePassImageType;
+import mcv.facepass.types.FacePassModel;
+import mcv.facepass.types.FacePassPose;
+import mcv.facepass.types.FacePassRCAttribute;
+import mcv.facepass.types.FacePassRecognitionResult;
+import mcv.facepass.types.FacePassAgeGenderResult;
+import mcv.facepass.types.FacePassRecognitionState;
+import mcv.facepass.types.FacePassTrackOptions;
 
 public class MainActivity extends FlutterActivity {
   FacePassHandler mFacePassHandler;
@@ -22,16 +39,16 @@ public class MainActivity extends FlutterActivity {
   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
     super.configureFlutterEngine(flutterEngine);
     new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL).setMethodCallHandler(
-
       (call, result) -> {
-        //if ("logtest" == call.method) { // compare reference not value
-        if ("logtest".equals(call.method)) {
-          Toast.makeText(this, "logtest", Toast.LENGTH_LONG).show();
-          Log.d(DEBUG_TAG, "onCreate");
-          result.success("success");
+
+        switch(call.method) {
+          case "logtest":
+            result.success("[Example] this is log test from Java");
+            break;
+          default:
+            Log.e(DEBUG_TAG, "unidentified channel");
+            result.success(false);
         }
-        // This method is invoked on the main thread.
-        // TODO
       }
     );
   }
