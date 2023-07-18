@@ -71,5 +71,6 @@ flutter {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*'], dir: 'src')
     implementation files('libs/FacePassAndroidSDK-year-release.aar')
 }

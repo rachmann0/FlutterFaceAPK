@@ -1,14 +1,13 @@
-package com.facepass.utils;
+package com.facepass.method;
 
 import android.util.Log;
 import java.util.Map;
 import java.util.HashMap;
 
-public class Channel {
+public class Connect {
   private static final String DEBUG_TAG = "java";
   
-  public static Map<String, Object> connect(HashMap _arguments) {
-    // Initialize SDK, etc..
+  public static Map<String, Object> call(HashMap _arguments) {
     int deviceId = (int)_arguments.get("deviceId");
 
     Map<String, Object> response = new HashMap<>();

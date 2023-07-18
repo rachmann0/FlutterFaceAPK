@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'helpers/init.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'FacePass Homepage'),
+      home: const MyHomePage(title: 'FacePass'),
     );
   }
 }
@@ -34,17 +34,21 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  var channel = const MethodChannel("com.facepass/channel");
+  // onInit
+  @override
+  void initState() {
+    super.initState();
+    Init.onChannelConnect();
+  }
+
+  // onDestroy
+  @override
+  void dispose() {
+    super.dispose();
+    
+  }
 
   void _incrementCounter() async {
-    try {
-      final response = Map<String, dynamic>.from(
-          await channel.invokeMethod('connect', {"deviceId": 123}));
-      print(response);
-    } catch (error) {
-      print(error);
-    }
-
     setState(() {
       _counter++;
     });

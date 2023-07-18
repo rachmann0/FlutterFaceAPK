@@ -546,9 +546,13 @@
 //     }
 
 //     private static byte[] faceToken;
+//     private static byte[] faceData;
+//     private static Bitmap faceBitmap;
 //     public void addFace(String bitmapBase64, CallbackContext callbackContext) {
 //         byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
 //         Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+//         faceData = decodedString;
+//         faceBitmap = bitmap;
 
 //         if (mFacePassHandler == null) {
 //             Log.d(DEBUG_TAG,"FacePassHandle is null !");
@@ -783,21 +787,30 @@
 //                 params.setPreviewFormat(ImageFormat.NV21);
 //                 mCamera.setParameters(params);
 //                 mCamera.startPreview();
-//                 mCamera.takePicture(null, null, null, new Camera.PictureCallback() {
+//                 Camera.PictureCallback pictureCallback =  new Camera.PictureCallback() {
 //                     @Override
 //                     public void onPictureTaken(byte[] data, Camera camera) {
 //                         Log.i(DEBUG_TAG, "picture-taken");
 //                         PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "picture-taken");
 //                         pluginResult.setKeepCallback(true);
 //                         recognizeThreadCallbackContext.sendPluginResult(pluginResult);
-// /*
-//                         cameraPreviewData = new CameraPreviewData(data, 640, 480,
-//                                 previewDegreen, front););
-// */
-//                         CameraPreviewData cameraPreviewData = new CameraPreviewData(data, 640,480, previewDegreen, front);
+//  /*
+//                          cameraPreviewData = new CameraPreviewData(data, 640, 480,
+//                                  previewDegreen, front););
+//  */
+//                         CameraPreviewData cameraPreviewData = new CameraPreviewData(data, 640, 480, previewDegreen, front);
 //                         mFeedFrameQueue.offer(cameraPreviewData);
 //                     }
-//                 });
+//                  };
+//                 //mCamera.takePicture(null, pictureCallback, null);
+//                 mCamera.takePicture(null, null, pictureCallback);
+
+
+//                 // if (faceData != null) {
+//                 // CameraPreviewData cameraPreviewData1 = new CameraPreviewData(faceData, 1700,2267, previewDegreen, front);
+//                 // mFeedFrameQueue.offer(cameraPreviewData1);
+//                 // }
+
 //                 // PluginResult pluginResultRun = new PluginResult(PluginResult.Status.OK, "FeedFrameThread run");
 //                 // pluginResultRun.setKeepCallback(true);
 //                 // recognizeThreadCallbackContext.sendPluginResult(pluginResultRun);

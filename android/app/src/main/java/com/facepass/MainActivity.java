@@ -7,6 +7,7 @@ import android.util.Log;
 import java.util.Map;
 import java.util.HashMap;
 import android.widget.Toast;
+import android.Manifest;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;
@@ -31,25 +32,27 @@ import mcv.facepass.types.FacePassAgeGenderResult;
 import mcv.facepass.types.FacePassRecognitionState;
 import mcv.facepass.types.FacePassTrackOptions;
 
-import com.facepass.utils.Channel;
+import com.facepass.method.InitializeSDK;
+import com.facepass.method.Connect;
+import com.facepass.configuration.Config;
+
+import android.app.Activity;
+import android.content.Context;
 
 public class MainActivity extends FlutterActivity {
   FacePassHandler mFacePassHandler;
 
-  private static final String CHANNEL = "com.facepass/channel";
-  private static final String DEBUG_TAG = "java";
+  Activity activity = getActivity();
+  Context context = getContext();
   
   @Override
   public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
     super.configureFlutterEngine(flutterEngine);
+    new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), Config.CHANNEL)
+    .setMethodCallHandler((call, result) -> {
 
-    new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
-    .setMethodCallHandler(
-      (call, result) -> {
-
-        /* Notes: Channel Response Example
-          
-        - Get arguments
+        /*  Notes: Channel Response Example
+          - Get arguments
           Map<String, Object> args = call.arguments();
           System.out.println(args.get("message"));
           System.out.println((boolean) args.get("isActive") == false);
@@ -85,13 +88,40 @@ public class MainActivity extends FlutterActivity {
 
           result.success(response);
         */
-
         switch (call.method) {
           case "connect":
-            result.success(Channel.connect(call.arguments()));
+            result.success(Connect.call(call.arguments()));
+            break;
+          case "initializeSDK":
+            result.success(InitializeSDK.call(activity));
+            break;
+          case "createGroup":
+            result.success(true);
+            break;
+          case "addFace":
+            result.success(true);
+            break;
+          case "bindGroupFaceToken":
+            result.success(true);
+            break;
+          // --
+          case "initGPIOManager":
+            result.success(true);
+            break;
+          case "getRelayStatus":
+            result.success(true);
+            break;
+          case "pullUpRelay":
+            result.success(true);
+            break;
+          case "pullDownRelay":
+            result.success(true);
+            break;
+          case "checkPluginAvailable":
+            result.success(true);
             break;
           default:
-            Log.e(DEBUG_TAG, "unidentified channel");
+            Log.e(Config.DEBUG_TAG, "unidentified channel");
             result.notImplemented();
         }
         
@@ -99,3 +129,4 @@ public class MainActivity extends FlutterActivity {
     );
   }
 }
+
