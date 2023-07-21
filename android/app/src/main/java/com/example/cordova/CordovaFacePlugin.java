@@ -215,13 +215,13 @@
 
 //         //initView();
 //         if (!hasPermission()) {
-//             requestPermission();
+//           requestPermission();
 //         } else {
-//             try {
-//                 initFacePassSDK(callbackContext);
-//             } catch (IOException e) {
-//                 e.printStackTrace();
-//             }
+//           try {
+//             initFacePassSDK(callbackContext);
+//           } catch (IOException e) {
+//             e.printStackTrace();
+//           }
 //         }
 
 //         // initFaceHandler(callbackContext);
@@ -230,6 +230,9 @@
 
 //         recognizeThreadCallbackContext = callbackContext;
 
+//         RecognizeThread mRecognizeThread;
+//         FeedFrameThread mFeedFrameThread;
+
 //         mFeedFrameThread = new FeedFrameThread();
 //         mFeedFrameThread.start();
 
@@ -237,8 +240,7 @@
 //         mRecognizeThread.start();
 
 //     }
-//     RecognizeThread mRecognizeThread;
-//     FeedFrameThread mFeedFrameThread;
+
 //     ArrayBlockingQueue<CameraPreviewData> mFeedFrameQueue;
 //     private enum FacePassSDKMode {
 //         MODE_ONLINE,

@@ -553,7 +553,7 @@
 //         }
 //     }
 
-//     protected boolean front = false;
+//     protected boolean front = true;
 //     private int previewDegreen = 0;
 //     private class FeedFrameThread extends Thread {
 //         boolean isInterrupt;
@@ -608,7 +608,7 @@
 //                             continue;
 //                         }
 //                         FacePassImage imageRGB = new FacePassImage(framePair.first.nv21Data, framePair.first.width, framePair.first.height, cameraRotation, FacePassImageType.NV21);
-//                         FacePassImage imageIR = new FacePassImage(framePair.second.nv21Data, framePair.second.width, framePair.second.height, cameraRotation, FacePassImageType.NV21);
+//                         FacePassImage imangeIR = ew FacePassImage(framePair.second.nv21Data, framePair.second.width, framePair.second.height, cameraRotation, FacePassImageType.NV21);
 //                         detectionResult = mFacePassHandler.feedFrameRGBIR(imageRGB, imageIR);
 //                         //detectionResult = mFacePassHandler.feedFrame(imageRGB, imageIR);
 //                     } else {
