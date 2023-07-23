@@ -5,16 +5,16 @@ class PassFaceData {
     try {
       var channel = MethodChannel(channelName);
       // final response = Map<String, dynamic>.from(await channel.invokeMethod('initializeSDK', {"deviceId": 123}));
-      final response = await channel.invokeMethod("passFaceData", {
+      await channel.invokeMethod("passFaceData", {
         "byteData": data, 
         "width": width,
         "height": height,
       });
 
-      print("Passing data success!");
-      print(response["byteData"]);
-      print(response["width"]);
-      print(response["height"]);
+      // print("Passing data success!");
+      // print(response["byteData"]);
+      // print(response["width"]);
+      // print(response["height"]);
     } on Exception catch (error) {
       print("passing data failed!");
       print(error);

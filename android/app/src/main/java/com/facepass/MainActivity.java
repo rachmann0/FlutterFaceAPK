@@ -61,7 +61,7 @@ public class MainActivity extends FlutterActivity {
   public static final String CHANNEL = "com.facepass/channel";
 
   // TAG
-  public static final String DEBUG_TAG = "facepass-java";
+  public static String DEBUG_TAG = "facepass-java";
   private static final String TAG = "MyActivity";
 
   // GROUP
@@ -183,8 +183,12 @@ public class MainActivity extends FlutterActivity {
             result.success(true);
             break;
           case "addFace":
-            addFace(faceBM64);
-            result.success(true);
+            // addFace(faceBM64);
+            Log.d(DEBUG_TAG, "invoke add face");
+            Map<String, Object> arguments = call.arguments();
+
+            String faceImage = (String) arguments.get("data");
+            result.success(addFace(faceImage));
             break;
           case "bindGroupFaceToken":
             result.success(true);
@@ -736,12 +740,15 @@ public class MainActivity extends FlutterActivity {
 
   // --- ADD FACE
   public boolean addFace(String bitmapBase64) {
+    DEBUG_TAG = "ADD_FACE";
+    Log.d(DEBUG_TAG, "addFace ");
     byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
     Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
     faceData = decodedString;
     faceBitmap = bitmap;
 
     if (mFacePassHandler == null) {
+      System.out.println("FacePassHandle is null !");
       Log.d(DEBUG_TAG,"FacePassHandle is null !");
       // callbackContext.error("FacePassHandle is null !");
       return false;
@@ -749,6 +756,8 @@ public class MainActivity extends FlutterActivity {
 
     try {
       FacePassAddFaceResult result = mFacePassHandler.addFace(bitmap);
+      boolean isNull = result == null;
+      Log.d(DEBUG_TAG, "result isNUll: " + isNull);
       if (result != null) {
         if (result.result == 0) {
           android.util.Log.d("qujiaqi", "result:" + result
@@ -773,9 +782,12 @@ public class MainActivity extends FlutterActivity {
       }
     } catch (FacePassException e) {
       e.printStackTrace();
+      Log.d(DEBUG_TAG, "add face error");
       // callbackContext.error(e.getMessage());
       return false;
     }
+
+    Log.d(DEBUG_TAG, "add face throws error");
     return false;
   }
 
