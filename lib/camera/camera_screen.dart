@@ -14,7 +14,7 @@ class CameraScreen extends StatelessWidget {
         // Add camera layer here
         CameraViewer(),
         FacepassLayer(),
-        TopImageViewer()
+        // TopImageViewer()
       ],
     );
   }
