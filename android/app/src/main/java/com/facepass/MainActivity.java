@@ -207,6 +207,12 @@ public class MainActivity extends FlutterActivity {
           case "bindGroupFaceToken":
             result.success(true);
             break;
+          case "passFaceData":
+            Map<String, Object> args = call.arguments();
+            // CameraPreviewData cameraPreviewData = new CameraPreviewData(args.get("data"), 640, 480, previewDegreen, front);
+            // mFeedFrameQueue.offer(cameraPreviewData);
+            result.success(args.get("data"));
+            break;
           default:
             Log.e(DEBUG_TAG, "unidentified channel");
             result.notImplemented();
