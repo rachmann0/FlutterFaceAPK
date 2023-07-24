@@ -8,7 +8,6 @@ class AddFace {
 
       String data = await getData();
       return await channel.invokeMethod("addFace", {"data": data});
-      print("Add Face Success!");
     } on Exception catch (error) {
       print("Add Face Failed!");
       print(error);

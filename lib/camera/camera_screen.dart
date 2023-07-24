@@ -1,6 +1,5 @@
 import "package:facepass/camera/camera_viewer.dart";
 import 'package:facepass/camera/facepass_layer.dart';
-import "package:facepass/camera/top_image_viewer.dart";
 import "package:flutter/material.dart";
 
 class CameraScreen extends StatelessWidget {
