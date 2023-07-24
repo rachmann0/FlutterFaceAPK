@@ -7,15 +7,20 @@ import 'helpers/inititalizeAPK.dart';
 // import 'package:image/image.dart' as imglib;
 
 class ScanController extends GetxController {
-  var channelName = "com.facepass/channel";
+  final String _channelName = "com.facepass/channel";
 
   final RxBool _isInitialized = RxBool(false);
   late CameraController _cameraController;
   late List<CameraDescription> _cameras;
-  late CameraImage _cameraImage;
+  // late CameraImage _cameraImage;
+  String _groupName = "";
+  String _faceToken = "";
 
   final RxList<Uint8List> _imageList = RxList([]);
 
+  String get faceToken => _faceToken;
+  String get groupName => _groupName;
+  String get channelName => _channelName;
   List<Uint8List> get imageList => _imageList;
   bool get isInitialized => _isInitialized.value;
   CameraController get cameraController => _cameraController;
@@ -61,8 +66,15 @@ class ScanController extends GetxController {
   }
 
   void capture(CameraImage cameraImage) {
-    PassFaceData.call(channelName, cameraImage.planes[0].bytes, cameraImage.width, cameraImage.height);
-    // print(_cameraImage.planes[0].bytes);
-    // print(_cameraImage.planes[0].bytes.length);
+    PassFaceData.call(channelName, cameraImage.planes[0].bytes,
+        cameraImage.width, cameraImage.height);
+  }
+
+  void setGroupName(String groupName) {
+    _groupName = groupName;
+  }
+
+  void setFaceToken(String faceToken) {
+    _faceToken = faceToken;
   }
 }

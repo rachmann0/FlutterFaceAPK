@@ -8,14 +8,16 @@ class CameraScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Stack(
-      alignment: Alignment.center,
-      children: [
-        // Add camera layer here
-        CameraViewer(),
-        FacepassLayer(),
-        // TopImageViewer()
-      ],
+    return const Scaffold(
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Add camera layer here
+          CameraViewer(),
+          FacepassLayer(),
+          // TopImageViewer()
+        ],
+      )
     );
   }
 }

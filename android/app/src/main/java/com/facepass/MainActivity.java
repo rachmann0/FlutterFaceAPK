@@ -65,7 +65,7 @@ public class MainActivity extends FlutterActivity {
   private static final String TAG = "MyActivity";
 
   // GROUP
-  String group_name = "facepass";
+  String group_name = "";
   private boolean isLocalGroupExist = false;
 
 
@@ -134,6 +134,7 @@ public class MainActivity extends FlutterActivity {
     super.configureFlutterEngine(flutterEngine);
     new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
       .setMethodCallHandler((call, result) -> {
+        Map<String, Object> args = call.arguments();
 
         /*  Notes: Channel Response Example
           - Get arguments
@@ -173,28 +174,24 @@ public class MainActivity extends FlutterActivity {
           result.success(response);*/
 
         switch (call.method) {
-          case "hasPermission":
-            result.success(true);
-            break;
           case "initializeAPK":
             result.success(initializeAPK());
             break;
           case "createGroup":
+            createGroup((String) args.get("groupName"));
             result.success(true);
             break;
           case "addFace":
             // addFace(faceBM64);
             Log.d(DEBUG_TAG, "invoke add face");
-            Map<String, Object> arguments = call.arguments();
-
-            String faceImage = (String) arguments.get("data");
+            String faceImage = (String) args.get("data");
             result.success(addFace(faceImage));
             break;
           case "bindGroupFaceToken":
+            bindGroupFaceToken((String) args.get("groupName"), (String) args.get("faceToken"));
             result.success(true);
             break;
           case "passFaceData":
-            Map<String, Object> args = call.arguments();
             byte[] byteData = (byte[]) args.get("byteData");
             int width = (int) args.get("width");
             int height = (int) args.get("height");
@@ -733,13 +730,14 @@ public class MainActivity extends FlutterActivity {
     // callbackContext.success("create group " + groupName + " " + isSuccess);
     if (isSuccess && group_name.equals(groupName)) {
       isLocalGroupExist = true;
+      group_name = groupName;
       return true;
     }
     return false;
   }
 
   // --- ADD FACE
-  public boolean addFace(String bitmapBase64) {
+  public String addFace(String bitmapBase64) {
     DEBUG_TAG = "ADD_FACE";
     Log.d(DEBUG_TAG, "addFace ");
     byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
@@ -751,7 +749,7 @@ public class MainActivity extends FlutterActivity {
       System.out.println("FacePassHandle is null !");
       Log.d(DEBUG_TAG,"FacePassHandle is null !");
       // callbackContext.error("FacePassHandle is null !");
-      return false;
+      return "";
     }
 
     try {
@@ -769,26 +767,26 @@ public class MainActivity extends FlutterActivity {
           faceToken = result.faceToken;
           Log.d(DEBUG_TAG, "add face successfully! ");
           Log.d(DEBUG_TAG, new String(result.faceToken));
-          return true;
+          return new String(result.faceToken);
         } else if (result.result == 1) {
           // callbackContext.success("no face ！");
           Log.d(DEBUG_TAG, "no face ！");
-          return false;
+          return "";
         } else {
           // callbackContext.success("quality problem！");
           Log.d(DEBUG_TAG, "quality problem！");
-          return false;
+          return "";
         }
       }
     } catch (FacePassException e) {
       e.printStackTrace();
       Log.d(DEBUG_TAG, "add face error");
       // callbackContext.error(e.getMessage());
-      return false;
+      return "";
     }
 
     Log.d(DEBUG_TAG, "add face throws error");
-    return false;
+    return "";
   }
 
   // --- Bind Group Face Token
