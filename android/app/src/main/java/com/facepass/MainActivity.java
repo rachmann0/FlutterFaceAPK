@@ -198,6 +198,7 @@ public class MainActivity extends FlutterActivity {
 
             mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
             result.success(args);
+            // try calling feed frame and recognize without using threads
             break;
           default:
             Log.e(DEBUG_TAG, "unidentified channel");
@@ -498,11 +499,13 @@ public class MainActivity extends FlutterActivity {
     @Override
     public void run() {
       while (!isInterrupt) {
+        Log.d(DEBUG_TAG, "!!!!RecognizeThread!!!");
         try {
           RecognizeData recognizeData = mRecognizeDataQueue.take();
           FacePassAgeGenderResult[] ageGenderResult = null;
 
           if (isLocalGroupExist) {
+          //  if (true) {
             Log.d(DEBUG_TAG, "RecognizeData >>>>");
 
             FacePassRecognitionResult[][] recognizeResultArray = mFacePassHandler.recognize(group_name, recognizeData.message, 1, recognizeData.trackOpt);
@@ -660,7 +663,7 @@ public class MainActivity extends FlutterActivity {
         for (int i = 0; i < detectionResult.faceList.length; ++i) {
           Log.i("DEBUG_TAG", "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
         }
-        Log.i("]time", String.format("feedframe %d ms", runTime));
+        //Log.i("]time", String.format("feedframe %d ms", runTime));
       }
     }
 
