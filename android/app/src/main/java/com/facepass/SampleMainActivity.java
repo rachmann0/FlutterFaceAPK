@@ -179,7 +179,7 @@
 //           data.put("firstName", firstName);
 //           data.put("lastName", lastName);
 
-//           - Response status 
+//           - Response status
 //           boolean isSuccess = true;
 //           response.put("isSuccess", isSuccess);
 
@@ -192,7 +192,7 @@
 //         */
 
 //         switch (call.method) {
-//           case "connect":
+//           case "hasPermission":
 //             result.success(true);
 //             break;
 //           case "initializeSDK":
@@ -207,6 +207,13 @@
 //           case "bindGroupFaceToken":
 //             result.success(true);
 //             break;
+//           case "passFaceData":
+//             Map<String, Object> args = call.arguments();
+//             // CameraPreviewData cameraPreviewData = new CameraPreviewData(args.get("data"), 640, 480, previewDegreen, front);
+//             // mFeedFrameQueue.offer(cameraPreviewData);
+//             System.out.println(args.get("data"));
+//             // result.success(args.get("data"));
+//             break;
 //           default:
 //             Log.e(DEBUG_TAG, "unidentified channel");
 //             result.notImplemented();
@@ -218,14 +225,14 @@
 //   // --- INITIALIZE SDK
 //   private boolean hasPermission() {
 //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//       return 
+//       return
 //         getActivity().checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
 //         getActivity().checkSelfPermission(PERMISSION_INTERNET) == PackageManager.PERMISSION_GRANTED &&
 //         getActivity().checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
 //         // getActivity().checkSelfPermission(PERMISSION_READ_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-//         // getActivity().checkSelfPermission(PERMISSION_WRITE_STORAGE) == PackageManager.PERMISSION_GRANTED 
-//       } 
-//     return 
+//         // getActivity().checkSelfPermission(PERMISSION_WRITE_STORAGE) == PackageManager.PERMISSION_GRANTED
+//       }
+//     return
 //       getActivity().checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
 //       getActivity().checkSelfPermission(PERMISSION_INTERNET) == PackageManager.PERMISSION_GRANTED &&
 //       getActivity().checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
@@ -262,7 +269,7 @@
 //   private void singleCertification() throws IOException {
 //     // String cert = FileUtil.readExternal(CERT_PATH).trim();
 //     String cert = "\"{\"\"serial\"\":\"\"z0005a8759f61d5f4b2862852034c139ddada\"\",\"\"key\"\":\"\"2a6a6e824b1bfb87553faecb38faf4122936055c915fb3ac814c8879994d1542f304999e02ec2ff25d278b110695b76980b3002d57d2f4f20d779f2ffc95e1bac4ff713f244ad0d7da10a0491ee0fbfce6c9ee0f4a8fd42f0fb17ef56070773c73272014a60096f06154620fa427ea3b0dbace0ec3d7a9b59e4cb9775da41275d6fe6b904539f59910ad012bc89dc86d3fd43af436040a036375767226261a30e9d05e87c89f821b9875da230409f7d66748bcfc9f8281cf802305a8664739f3354a3d13565b16ce\"\"}\"\n".trim();
-    
+
 //     if(TextUtils.isEmpty(cert)){
 //         Log.d("mcvsafe", "cert is null");
 //         return;
@@ -386,13 +393,13 @@
 //               config = new FacePassConfig();
 //               config.poseBlurModel = FacePassModel.initModel(getActivity().getApplicationContext().getAssets(), "attr.pose_blur.arm.190630.bin");
 //               config.livenessModel = FacePassModel.initModel(getActivity().getApplicationContext().getAssets(), "liveness.CPU.rgb.G.bin");
-              
+
 //               if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
 //                 config.rgbIrLivenessModel = FacePassModel.initModel(getActivity().getApplicationContext().getAssets(), "liveness.CPU.rgbir.I.bin");
-                
+
 //                 // Real and fake models on the same screen
 //                 config.rgbIrGaLivenessModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "liveness.CPU.rgbir.ga_case.A.bin");
-                
+
 //                 // If you need to use the GPU model, load the following model files
 //                 config.livenessGPUCache = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "liveness.GPU.rgbir.I.cache");
 //                 config.rgbIrLivenessGpuModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "liveness.GPU.rgbir.I.bin");
@@ -468,7 +475,7 @@
 //             // callbackContext.success("SDK successfully initialized");
 //             return;
 //           }
-          
+
 //           try {
 //             sleep(500);
 //           } catch (InterruptedException e) {
@@ -562,7 +569,7 @@
 //                       // pluginResult.setKeepCallback(true);
 //                       // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
 //                     }
-                    
+
 //                     // int idx = findidx(ageGenderResult, result.trackId);
 //                     // if (idx == -1) {
 //                     //     showRecognizeResult(result.trackId, result.detail.searchScore, result.detail.livenessScore, !TextUtils.isEmpty(faceToken));
@@ -617,37 +624,37 @@
 //         // PluginResult pluginResultRun = new PluginResult(PluginResult.Status.OK, "picture-taken");
 //         // pluginResultRun.setKeepCallback(true);
 //         // recognizeThreadCallbackContext.sendPluginResult(pluginResultRun);
-        
-//         Camera mCamera = Camera.open();
-//         try {
-//           mCamera.setPreviewTexture(new SurfaceTexture(10));
-//         } catch (IOException e1) {
-//           Log.e(DEBUG_TAG, e1.getMessage());
-//         }
 
-//         Camera.Parameters params = mCamera.getParameters();
-//         params.setPreviewSize(640, 480);
-//         params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-//         //params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
-//         //params.setPictureFormat(ImageFormat.JPEG);
-//         params.setPreviewFormat(ImageFormat.NV21);
-//         mCamera.setParameters(params);
-//         mCamera.startPreview();
-//         Camera.PictureCallback pictureCallback =  new Camera.PictureCallback() {
+//         // Camera mCamera = Camera.open();
+//         // try {
+//         //   mCamera.setPreviewTexture(new SurfaceTexture(10));
+//         // } catch (IOException e1) {
+//         //   Log.e(DEBUG_TAG, e1.getMessage());
+//         // }
 
-//           @Override
-//           public void onPictureTaken(byte[] data, Camera camera) {
-//             Log.i(DEBUG_TAG, "picture-taken");
-//             // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "picture-taken");
-//             // pluginResult.setKeepCallback(true);
-//             // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
-//             //  cameraPreviewData = new CameraPreviewData(data, 640, 480,previewDegreen, front);
-//             CameraPreviewData cameraPreviewData = new CameraPreviewData(data, 640, 480, previewDegreen, front);
-//             mFeedFrameQueue.offer(cameraPreviewData);
-//           }
-//         };
-//         //mCamera.takePicture(null, pictureCallback, null);
-//         mCamera.takePicture(null, null, pictureCallback);
+//         // Camera.Parameters params = mCamera.getParameters();
+//         // params.setPreviewSize(640, 480);
+//         // params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+//         // //params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+//         // //params.setPictureFormat(ImageFormat.JPEG);
+//         // params.setPreviewFormat(ImageFormat.NV21);
+//         // mCamera.setParameters(params);
+//         // mCamera.startPreview();
+//         // Camera.PictureCallback pictureCallback =  new Camera.PictureCallback() {
+
+//         //   @Override
+//         //   public void onPictureTaken(byte[] data, Camera camera) {
+//         //     Log.i(DEBUG_TAG, "picture-taken");
+//         //     // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "picture-taken");
+//         //     // pluginResult.setKeepCallback(true);
+//         //     // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
+//         //     //  cameraPreviewData = new CameraPreviewData(data, 640, 480,previewDegreen, front);
+//         //     CameraPreviewData cameraPreviewData = new CameraPreviewData(data, 640, 480, previewDegreen, front);
+//         //     mFeedFrameQueue.offer(cameraPreviewData);
+//         //   }
+//         // };
+//         // //mCamera.takePicture(null, pictureCallback, null);
+//         // mCamera.takePicture(null, null, pictureCallback);
 
 //         // if (faceData != null) {
 //         //   CameraPreviewData cameraPreviewData1 = new CameraPreviewData(faceData, 1700,2267, previewDegreen, front);
@@ -658,10 +665,10 @@
 //         // pluginResultRun.setKeepCallback(true);
 //         // recognizeThreadCallbackContext.sendPluginResult(pluginResultRun);
 
-//         // Convert the camera preview frame to the frame format required by the SDK algorithm FacePassImage 
+//         // Convert the camera preview frame to the frame format required by the SDK algorithm FacePassImage
 //         long startTime = System.currentTimeMillis(); //起始时间
 
-//         // Send each frame of FacePassImage into the SDK algorithm and get the returned result 
+//         // Send each frame of FacePassImage into the SDK algorithm and get the returned result
 //         FacePassDetectionResult detectionResult = null;
 //         try {
 //           if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
@@ -691,7 +698,7 @@
 //         }
 
 //         if (detectionResult == null || detectionResult.faceList.length == 0) {
-//           // There is no face detected in the current frame 
+//           // There is no face detected in the current frame
 //           runOnUiThread(new Runnable() {
 //             @Override
 //             public void run() {
@@ -700,7 +707,7 @@
 //             }
 //           });
 //         } else {
-//           // Circle the recognized face in the preview interface, and display the face position and angle information on the top 
+//           // Circle the recognized face in the preview interface, and display the face position and angle information on the top
 //           final FacePassFace[] bufferFaceList = detectionResult.faceList;
 //           runOnUiThread(new Runnable() {
 //             @Override
@@ -729,9 +736,9 @@
 //             // Send the attribute information of the recognized face frame
 //             FacePassTrackOptions[] trackOpts = new FacePassTrackOptions[detectionResult.images.length];
 //             for (int i = 0; i < detectionResult.images.length; ++i) {
-//               if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID && 
+//               if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID &&
 //                   detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.NO_RESPIRATOR) {
-                
+
 //                 float searchThreshold = 60f;
 //                 float livenessThreshold = 80f; // -1.0f will not change the liveness threshold
 //                 float livenessGaThreshold = 85f;
@@ -790,18 +797,18 @@
 //         return false;
 //       }
 //     }
-    
+
 //     initFaceHandler();
-    
-//     FeedFrameThread mFeedFrameThread = new FeedFrameThread();
-//     mFeedFrameThread.start();
-    
-//     RecognizeThread mRecognizeThread = new RecognizeThread();
-//     mRecognizeThread.start();
+
+//     // FeedFrameThread mFeedFrameThread = new FeedFrameThread();
+//     // mFeedFrameThread.start();
+
+//     // RecognizeThread mRecognizeThread = new RecognizeThread();
+//     // mRecognizeThread.start();
 //     return true;
 //   }
 
-//   // --- CREATE GROUP 
+//   // --- CREATE GROUP
 //   public boolean createGroup(String groupName) {
 //     if (mFacePassHandler == null) {
 //       Log.d(DEBUG_TAG, "FacePassHandle is null ! ");
@@ -830,7 +837,7 @@
 //     return false;
 //   }
 
-//   // --- ADD FACE 
+//   // --- ADD FACE
 //   public boolean addFace(String bitmapBase64) {
 //     byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
 //     Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
@@ -888,13 +895,13 @@
 //       Log.d(DEBUG_TAG, "Facepass Handle is null!");
 //       return false;
 //     }
-    
+
 //     if (faceToken == null || faceToken.length == 0 || TextUtils.isEmpty(groupName)) {
 //       // callbackContext.error("params error！");
 //       Log.d(DEBUG_TAG, "Params error!");
 //       return false;
 //     }
-    
+
 //     try {
 //       boolean b = mFacePassHandler.bindGroup(groupName, faceToken);
 //       String result = b ? "success " : "failed";
@@ -910,50 +917,50 @@
 //   }
 
 //   // --- Initialize View
-//   private void initView() {
-//     int windowRotation = ((WindowManager) (getApplicationContext().getSystemService(Context.WINDOW_SERVICE))).getDefaultDisplay().getRotation() * 90;
-//     if (windowRotation == 0) {
-//       cameraRotation = FacePassImageRotation.DEG90;
-//     } else if (windowRotation == 90) {
-//       cameraRotation = FacePassImageRotation.DEG0;
-//     } else if (windowRotation == 270) {
-//       cameraRotation = FacePassImageRotation.DEG180;
-//     } else {
-//       cameraRotation = FacePassImageRotation.DEG270;
-//     }
-//     Log.i(DEBUG_TAG, "Rotation: cameraRation: " + cameraRotation);
+//   // private void initView() {
+//   //   int windowRotation = ((WindowManager) (getApplicationContext().getSystemService(Context.WINDOW_SERVICE))).getDefaultDisplay().getRotation() * 90;
+//   //   if (windowRotation == 0) {
+//   //     cameraRotation = FacePassImageRotation.DEG90;
+//   //   } else if (windowRotation == 90) {
+//   //     cameraRotation = FacePassImageRotation.DEG0;
+//   //   } else if (windowRotation == 270) {
+//   //     cameraRotation = FacePassImageRotation.DEG180;
+//   //   } else {
+//   //     cameraRotation = FacePassImageRotation.DEG270;
+//   //   }
+//   //   Log.i(DEBUG_TAG, "Rotation: cameraRation: " + cameraRotation);
 
-//     cameraFacingFront = true;
-//     SharedPreferences preferences = getContext().getSharedPreferences(SettingVar.SharedPrefrence, Context.MODE_PRIVATE);
-//     SettingVar.isSettingAvailable = preferences.getBoolean("isSettingAvailable", SettingVar.isSettingAvailable);
-//     SettingVar.isCross = preferences.getBoolean("isCross", SettingVar.isCross);
-//     SettingVar.faceRotation = preferences.getInt("faceRotation", SettingVar.faceRotation);
-//     SettingVar.cameraPreviewRotation = preferences.getInt("cameraPreviewRotation", SettingVar.cameraPreviewRotation);
-//     SettingVar.cameraFacingFront = preferences.getBoolean("cameraFacingFront", SettingVar.cameraFacingFront);
+//   //   cameraFacingFront = true;
+//   //   SharedPreferences preferences = getContext().getSharedPreferences(SettingVar.SharedPrefrence, Context.MODE_PRIVATE);
+//   //   SettingVar.isSettingAvailable = preferences.getBoolean("isSettingAvailable", SettingVar.isSettingAvailable);
+//   //   SettingVar.isCross = preferences.getBoolean("isCross", SettingVar.isCross);
+//   //   SettingVar.faceRotation = preferences.getInt("faceRotation", SettingVar.faceRotation);
+//   //   SettingVar.cameraPreviewRotation = preferences.getInt("cameraPreviewRotation", SettingVar.cameraPreviewRotation);
+//   //   SettingVar.cameraFacingFront = preferences.getBoolean("cameraFacingFront", SettingVar.cameraFacingFront);
 
-//     if (SettingVar.isSettingAvailable) {
-//       cameraRotation = SettingVar.faceRotation;
-//       cameraFacingFront = SettingVar.cameraFacingFront;
-//     }
+//   //   if (SettingVar.isSettingAvailable) {
+//   //     cameraRotation = SettingVar.faceRotation;
+//   //     cameraFacingFront = SettingVar.cameraFacingFront;
+//   //   }
 
-//     Log.i(DEBUG_TAG, "Rotation: screenRotation: " + String.valueOf(windowRotation));
-//     Log.i(DEBUG_TAG, "Rotation: faceRotation: " + SettingVar.faceRotation);
-//     Log.i(DEBUG_TAG, "Rotation: new cameraRation: " + cameraRotation);
-//     final int mCurrentOrientation = getContext().getResources().getConfiguration().orientation;
+//   //   Log.i(DEBUG_TAG, "Rotation: screenRotation: " + String.valueOf(windowRotation));
+//   //   Log.i(DEBUG_TAG, "Rotation: faceRotation: " + SettingVar.faceRotation);
+//   //   Log.i(DEBUG_TAG, "Rotation: new cameraRation: " + cameraRotation);
+//   //   final int mCurrentOrientation = getContext().getResources().getConfiguration().orientation;
 
-//     if (mCurrentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-//       screenState = 1;
-//     } else if (mCurrentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-//       screenState = 0;
-//     }
-//     //cordova.getActivity().setContentView(R.layout.activity_main);
+//   //   if (mCurrentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+//   //     screenState = 1;
+//   //   } else if (mCurrentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+//   //     screenState = 0;
+//   //   }
+//   //   //cordova.getActivity().setContentView(R.layout.activity_main);
 
-//     SettingVar.cameraSettingOk = false;
-//     //manager = new CameraManager();
-//     //cameraView = (CameraPreview) findViewById(R.id.preview);
-//     //manager.setPreviewDisplay(cameraView);
-//     /* 注册相机回调函数 */
-//     //manager.setListener(this);
-//   }
+//   //   SettingVar.cameraSettingOk = false;
+//   //   //manager = new CameraManager();
+//   //   //cameraView = (CameraPreview) findViewById(R.id.preview);
+//   //   //manager.setPreviewDisplay(cameraView);
+//   //   /* 注册相机回调函数 */
+//   //   //manager.setListener(this);
+//   // }
 // }
 

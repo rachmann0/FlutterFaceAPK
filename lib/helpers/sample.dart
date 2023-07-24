@@ -6,8 +6,8 @@ class Sample {
       var channel = const MethodChannel("com.facepass/channel");
 
       // final response = Map<String, dynamic>.from(
-      //     await channel.invokeMethod('initializeSDK', {"deviceId": 123}));
-      final response = await channel.invokeMethod("initializeSDK");
+      //     await channel.invokeMethod('methodName', {"deviceId": 123}));
+      final response = await channel.invokeMethod("methodName");
       print("init SDK");
       print(response);
     } catch (error) {

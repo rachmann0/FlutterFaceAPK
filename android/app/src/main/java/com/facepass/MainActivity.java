@@ -5,13 +5,6 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 
-// import com.ys.rkapi.GPIOManager;
-// import com.ys.rkapi.MyManager;
-
-// import org.json.JSONArray;
-// import org.json.JSONException;
-// import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.app.Activity;
@@ -30,11 +23,6 @@ import android.util.Base64;
 import android.view.WindowManager;
 import android.content.res.Configuration;
 import android.content.SharedPreferences;
-// import android.opengl.GLES32;
-// import android.os.Bundle;
-// import android.telecom.Call;
-
-// import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -69,83 +57,76 @@ import com.facepass.SettingVar;
 public class MainActivity extends FlutterActivity {
   FacePassHandler mFacePassHandler;
 
-  // Activity activity = getActivity();
-  // Context context = getApplicationContext();
-
   // CHANNEL
   public static final String CHANNEL = "com.facepass/channel";
 
-  // DEBUG TAG
-  public static final String DEBUG_TAG = "facepass-java";
-
-  String group_name = "facepass";
-
-  private CameraManager manager;
-  // private GPIOManager gpioManager;
-  // private MyManager myManager;
-
-
-  private static boolean cameraFacingFront = true;
-  int screenState = 0;// 0 横 1 竖
-
-
-  private enum FacePassSDKMode {
-    MODE_ONLINE,
-    MODE_OFFLINE
-  }
-  private static FacePassSDKMode SDK_MODE = FacePassSDKMode.MODE_OFFLINE;
-
+  // TAG
+  public static String DEBUG_TAG = "facepass-java";
   private static final String TAG = "MyActivity";
-  private boolean ageGenderEnabledGlobal;
+
+  // GROUP
+  String group_name = "facepass";
+  private boolean isLocalGroupExist = false;
+
+
+  // CAMERA
+  // private CameraManager manager;
+  CameraPreviewData cameraPreviewData;
+  private static boolean cameraFacingFront = true;
+  int screenState = 0;
+
   private enum FacePassCameraType{
     FACEPASS_SINGLECAM,
     FACEPASS_DUALCAM
   };
   private static FacePassCameraType CamType = FacePassCameraType.FACEPASS_SINGLECAM;
 
+  protected boolean front = false;
+  private int previewDegreen = 0;
 
+  private int cameraRotation;
+  private static ArrayBlockingQueue<Pair<CameraPreviewData, CameraPreviewData>> complexFrameQueue = new ArrayBlockingQueue<>(2);
+
+  // FACEPASS SDK MODE
+  private enum FacePassSDKMode {
+    MODE_ONLINE,
+    MODE_OFFLINE
+  }
+  private static FacePassSDKMode SDK_MODE = FacePassSDKMode.MODE_OFFLINE;
+
+  private boolean ageGenderEnabledGlobal;
+
+  ArrayBlockingQueue<RecognizeData> mRecognizeDataQueue;
+  ArrayBlockingQueue<CameraPreviewData> mFeedFrameQueue;
+
+  RecognizeThread mRecognizeThread;
+  FeedFrameThread mFeedFrameThread;
+
+  // PERMISSION
   private static final int PERMISSIONS_REQUEST = 1;
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
   private static final String PERMISSION_WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-  // private static final String PERMISSION_READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
-  private static final String PERMISSION_READ_STORAGE = Manifest.permission.READ_MEDIA_IMAGES;
+  private static final String PERMISSION_READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
   private static final String PERMISSION_INTERNET = Manifest.permission.INTERNET;
   private static final String PERMISSION_ACCESS_NETWORK_STATE = Manifest.permission.ACCESS_NETWORK_STATE;
-  // private String[] Permission = new String[]{PERMISSION_CAMERA, PERMISSION_WRITE_STORAGE, PERMISSION_READ_STORAGE, PERMISSION_INTERNET, PERMISSION_ACCESS_NETWORK_STATE};
   private String[] Permission = new String[]{PERMISSION_CAMERA, PERMISSION_INTERNET, PERMISSION_ACCESS_NETWORK_STATE};
 
-
+  // AUTHENTICATION
   public static final String CERT_PATH = "Cert/CBG_Android_Face_Reco---30-Trial-one-stage.cert";
 
   private static final String authIP = "https://api-cn.faceplusplus.com";
   public static final String apiKey = "";
   public static final String apiSecret = "";
   private enum FacePassAuthType{
-    FASSPASS_AUTH_MCVFACE,
+    FACEPASS_AUTH_MCVFACE,
     FACEPASS_AUTH_MCVSAFE
   };
   private static FacePassAuthType authType = FacePassAuthType.FACEPASS_AUTH_MCVSAFE;
 
-
-  private boolean isLocalGroupExist = false;
-
-
+  // FACE PROCESSING
   private static byte[] faceToken;
   private static byte[] faceData;
   private static Bitmap faceBitmap;
-
-
-  // public CallbackContext recognizeThreadCallbackContext;
-
-  private int cameraRotation;
-  private static ArrayBlockingQueue<Pair<CameraPreviewData, CameraPreviewData>> complexFrameQueue = new ArrayBlockingQueue<>(2);
-
-
-  protected boolean front = false;
-  private int previewDegreen = 0;
-
-  ArrayBlockingQueue<RecognizeData> mRecognizeDataQueue = new ArrayBlockingQueue<RecognizeData>(5);
-  ArrayBlockingQueue<CameraPreviewData> mFeedFrameQueue = new ArrayBlockingQueue<CameraPreviewData>(1);
 
 
   @Override
@@ -153,6 +134,7 @@ public class MainActivity extends FlutterActivity {
     super.configureFlutterEngine(flutterEngine);
     new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
       .setMethodCallHandler((call, result) -> {
+
         /*  Notes: Channel Response Example
           - Get arguments
           Map<String, Object> args = call.arguments();
@@ -179,7 +161,7 @@ public class MainActivity extends FlutterActivity {
           data.put("firstName", firstName);
           data.put("lastName", lastName);
 
-          - Response status 
+          - Response status
           boolean isSuccess = true;
           response.put("isSuccess", isSuccess);
 
@@ -188,30 +170,37 @@ public class MainActivity extends FlutterActivity {
 
           System.out.println(response);
 
-          result.success(response);
-        */
+          result.success(response);*/
 
         switch (call.method) {
           case "hasPermission":
             result.success(true);
             break;
-          case "initializeSDK":
-            result.success(initializeSDK());
+          case "initializeAPK":
+            result.success(initializeAPK());
             break;
           case "createGroup":
             result.success(true);
             break;
           case "addFace":
-            result.success(true);
+            // addFace(faceBM64);
+            Log.d(DEBUG_TAG, "invoke add face");
+            Map<String, Object> arguments = call.arguments();
+
+            String faceImage = (String) arguments.get("data");
+            result.success(addFace(faceImage));
             break;
           case "bindGroupFaceToken":
             result.success(true);
             break;
           case "passFaceData":
             Map<String, Object> args = call.arguments();
-            // CameraPreviewData cameraPreviewData = new CameraPreviewData(args.get("data"), 640, 480, previewDegreen, front);
-            // mFeedFrameQueue.offer(cameraPreviewData);
-            result.success(args.get("data"));
+            byte[] byteData = (byte[]) args.get("byteData");
+            int width = (int) args.get("width");
+            int height = (int) args.get("height");
+
+            mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
+            result.success(args);
             break;
           default:
             Log.e(DEBUG_TAG, "unidentified channel");
@@ -221,28 +210,25 @@ public class MainActivity extends FlutterActivity {
     );
   }
 
-  // --- INITIALIZE SDK
+  // --- INITIALIZE APK
   private boolean hasPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      return 
+      return
         getActivity().checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
+        // getActivity().checkSelfPermission(PERMISSION_READ_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+        // getActivity().checkSelfPermission(PERMISSION_WRITE_STORAGE) == PackageManager.PERMISSION_GRANTED &&
         getActivity().checkSelfPermission(PERMISSION_INTERNET) == PackageManager.PERMISSION_GRANTED &&
         getActivity().checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
-        // getActivity().checkSelfPermission(PERMISSION_READ_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-        // getActivity().checkSelfPermission(PERMISSION_WRITE_STORAGE) == PackageManager.PERMISSION_GRANTED 
-      } 
-    return 
-      getActivity().checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
-      getActivity().checkSelfPermission(PERMISSION_INTERNET) == PackageManager.PERMISSION_GRANTED &&
-      getActivity().checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
+      }
+    return true;
   }
 
   private boolean requestPermission() {
     try {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         getActivity().requestPermissions(Permission, PERMISSIONS_REQUEST);
+        Log.d(DEBUG_TAG, "Request permission success.");
       }
-      Log.d(DEBUG_TAG, "Request permission success.");
       return true;
     } catch (Exception e) {
       Log.e(DEBUG_TAG, "Request permission failed.");
@@ -266,12 +252,11 @@ public class MainActivity extends FlutterActivity {
   }
 
   private void singleCertification() throws IOException {
-    // String cert = FileUtil.readExternal(CERT_PATH).trim();
     String cert = "\"{\"\"serial\"\":\"\"z0005a8759f61d5f4b2862852034c139ddada\"\",\"\"key\"\":\"\"2a6a6e824b1bfb87553faecb38faf4122936055c915fb3ac814c8879994d1542f304999e02ec2ff25d278b110695b76980b3002d57d2f4f20d779f2ffc95e1bac4ff713f244ad0d7da10a0491ee0fbfce6c9ee0f4a8fd42f0fb17ef56070773c73272014a60096f06154620fa427ea3b0dbace0ec3d7a9b59e4cb9775da41275d6fe6b904539f59910ad012bc89dc86d3fd43af436040a036375767226261a30e9d05e87c89f821b9875da230409f7d66748bcfc9f8281cf802305a8664739f3354a3d13565b16ce\"\"}\"\n".trim();
-    
+
     if(TextUtils.isEmpty(cert)){
-        Log.d("mcvsafe", "cert is null");
-        return;
+      Log.d("mcvsafe", "cert is null");
+      return;
     }
 
     final AuthApplyResponse[] resp = {new AuthApplyResponse()};
@@ -307,13 +292,16 @@ public class MainActivity extends FlutterActivity {
   }
 
   private void initFacePassSDK() throws IOException {
+    Log.d(DEBUG_TAG, "initFacePassSDK");
     FacePassHandler.initSDK(getApplicationContext());
-    if (authType == FacePassAuthType.FASSPASS_AUTH_MCVFACE) {
+
+    if (authType == FacePassAuthType.FACEPASS_AUTH_MCVFACE) {
       // Face Authorization
       FacePassHandler.authPrepare(getApplicationContext());
       FacePassHandler.getAuth(authIP, apiKey, apiSecret, true);
     } else if (authType == FacePassAuthType.FACEPASS_AUTH_MCVSAFE) {
       Log.d(DEBUG_TAG, "authType = FACEPASS_AUTH_MCVSAFE");
+
       // Authorized Interface
       boolean auth_status = FacePassHandler.authCheck();
       Log.d(DEBUG_TAG, "FacePassHandler.authCheck(): " + FacePassHandler.authCheck());
@@ -326,17 +314,9 @@ public class MainActivity extends FlutterActivity {
       if (!auth_status) {
         Log.d(DEBUG_TAG, "Authentication result : failed.");
         Log.d("mcvsafe", "Authentication result : failed.");
-        // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "Authentication result : failed.");
-        // pluginResult.setKeepCallback(true);
-        // callbackContext.sendPluginResult(pluginResult);
-        // 授权不成功，根据业务需求处理
-        // ...
         return;
       } else {
         Log.d("mcvsafe", "Authentication result : success.");
-        // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "Authentication result : success.");
-        // pluginResult.setKeepCallback(true);
-        // callbackContext.sendPluginResult(pluginResult);
         return;
       }
     } else {
@@ -344,7 +324,8 @@ public class MainActivity extends FlutterActivity {
       Log.d("FacePassDemo", "have no auth.");
       return ;
     }
-    Log.d(DEBUG_TAG, "FacePassHandler.getVersion() = " + FacePassHandler.getVersion());
+
+    Log.d(DEBUG_TAG, "FacePassHandler Version = " + FacePassHandler.getVersion());
   }
 
   private void checkGroup() {
@@ -383,22 +364,20 @@ public class MainActivity extends FlutterActivity {
       @Override
       public void run() {
         while (!getActivity().isFinishing()) {
-        // while (!isFinishing()) {
-            //Log.d(DEBUG_TAG, "FacePassHandler.isAvailable() = " + String.valueOf(FacePassHandler.isAvailable()));
+          Log.d(DEBUG_TAG, "FacePassHandler Version: " + String.valueOf(FacePassHandler.getVersion()));
+          Log.d(DEBUG_TAG, "FacePassHandler isAvailable: " + String.valueOf(FacePassHandler.isAvailable()));
           while (FacePassHandler.isAvailable()) {
-            Log.d(DEBUG_TAG, "start to build FacePassHandler");
+            Log.d(DEBUG_TAG, "Start to build FacePassHandler");
             FacePassConfig config;
             try {
               config = new FacePassConfig();
               config.poseBlurModel = FacePassModel.initModel(getActivity().getApplicationContext().getAssets(), "attr.pose_blur.arm.190630.bin");
               config.livenessModel = FacePassModel.initModel(getActivity().getApplicationContext().getAssets(), "liveness.CPU.rgb.G.bin");
-              
+
               if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
                 config.rgbIrLivenessModel = FacePassModel.initModel(getActivity().getApplicationContext().getAssets(), "liveness.CPU.rgbir.I.bin");
-                
                 // Real and fake models on the same screen
                 config.rgbIrGaLivenessModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "liveness.CPU.rgbir.ga_case.A.bin");
-                
                 // If you need to use the GPU model, load the following model files
                 config.livenessGPUCache = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "liveness.GPU.rgbir.I.cache");
                 config.rgbIrLivenessGpuModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "liveness.GPU.rgbir.I.bin");
@@ -406,20 +385,18 @@ public class MainActivity extends FlutterActivity {
               }
 
               config.searchModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "feat2.arm.K.v1.0_1core.bin");
-
               config.detectModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "detector.arm.G.bin");
               config.detectRectModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "detector_rect.arm.G.bin");
               config.landmarkModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "pf.lmk.arm.E.bin");
-
               config.rcAttributeModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "attr.RC.arm.G.bin");
               config.occlusionFilterModel = FacePassModel.initModel(getContext().getApplicationContext().getAssets(), "attr.occlusion.arm.20201209.bin");
               //config.smileModel = FacePassModel.initModel(getApplicationContext().getAssets(), "attr.RC.arm.200815.bin");
-
 
               config.rcAttributeAndOcclusionMode = 1;
               config.searchThreshold = 65f;
               config.livenessThreshold = 80f;
               config.livenessGaThreshold = 85f;
+
               if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
                 config.livenessEnabled = false;
                 config.rgbIrLivenessEnabled = true;      // Enable binocular living function (default CPU)
@@ -443,9 +420,8 @@ public class MainActivity extends FlutterActivity {
               config.smileEnabled = false;
               config.maxFaceEnabled = true;
               config.fileRootPath = getContext().getExternalFilesDir("Download").getAbsolutePath();
-
-              // config.fileRootPath = "/storage/emulated/0/Android/dataHelloCordova/files/Download";
-
+              
+              // SDK
               mFacePassHandler = new FacePassHandler(config);
 
               FacePassConfig addFaceConfig = mFacePassHandler.getAddFaceConfig();
@@ -462,19 +438,15 @@ public class MainActivity extends FlutterActivity {
               mFacePassHandler.setAddFaceConfig(addFaceConfig);
 
               checkGroup();
-
             } catch (FacePassException e) {
               e.printStackTrace();
-              // Log.d(DEBUG_TAG, "FacePassHandler is null");
               Log.d(DEBUG_TAG, "FacePassHandler is null: " + e.getMessage());
-              // callbackContext.error("FacePassHandler is null: " + e.getMessage());
               return;
             }
             Log.d(DEBUG_TAG, "SDK successfully initialized");
-            // callbackContext.success("SDK successfully initialized");
             return;
           }
-          
+
           try {
             sleep(500);
           } catch (InterruptedException e) {
@@ -530,25 +502,11 @@ public class MainActivity extends FlutterActivity {
     public void run() {
       while (!isInterrupt) {
         try {
-          // PluginResult pluginResultRun = new PluginResult(PluginResult.Status.OK, "run recognize thread: " + mRecognizeDataQueue.isEmpty());
-          // pluginResultRun.setKeepCallback(true);
-          // recognizeThreadCallbackContext.sendPluginResult(pluginResultRun);
-
           RecognizeData recognizeData = mRecognizeDataQueue.take();
           FacePassAgeGenderResult[] ageGenderResult = null;
 
-          //if (ageGenderEnabledGlobal) {
-          //    ageGenderResult = mFacePassHandler.getAgeGender(detectionResult);
-          //    for (FacePassAgeGenderResult t : ageGenderResult) {
-          //        Log.e("FacePassAgeGenderResult", "id " + t.trackId + " age " + t.age + " gender " + t.gender);
-          //    }
-          //}
-
           if (isLocalGroupExist) {
             Log.d(DEBUG_TAG, "RecognizeData >>>>");
-            // PluginResult pluginResultLocalGroup = new PluginResult(PluginResult.Status.OK, "isLocalGroupExist");
-            // pluginResultLocalGroup.setKeepCallback(true);
-            // recognizeThreadCallbackContext.sendPluginResult(pluginResultLocalGroup);
 
             FacePassRecognitionResult[][] recognizeResultArray = mFacePassHandler.recognize(group_name, recognizeData.message, 1, recognizeData.trackOpt);
             if (recognizeResultArray != null && recognizeResultArray.length > 0) {
@@ -559,33 +517,21 @@ public class MainActivity extends FlutterActivity {
                     if (FacePassRecognitionState.RECOGNITION_PASS == result.recognitionState) {
                       getFaceImageByFaceToken(result.trackId, faceToken);
                       Log.i(DEBUG_TAG, "SUCCESSFULLY RECOGNIZED");
-                      // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "SUCCESSFULLY RECOGNIZED");
-                      // pluginResult.setKeepCallback(true);
-                      // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
                     } else {
                       Log.i(DEBUG_TAG, "FAILED TO RECOGNIZE");
-                      // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "FAILED TO RECOGNIZE");
-                      // pluginResult.setKeepCallback(true);
-                      // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
                     }
-                    
-                    // int idx = findidx(ageGenderResult, result.trackId);
-                    // if (idx == -1) {
-                    //     showRecognizeResult(result.trackId, result.detail.searchScore, result.detail.livenessScore, !TextUtils.isEmpty(faceToken));
-                    // } else {
-                    //   showRecognizeResult(result.trackId, result.detail.searchScore, result.detail.livenessScore, !TextUtils.isEmpty(faceToken), ageGenderResult[idx].age, ageGenderResult[idx].gender);
-                    // }
 
                     Log.d(DEBUG_TAG, String.format("recognize trackid: %d, searchScore: %f  searchThreshold: %f, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
-                    result.trackId,
-                    result.detail.searchScore,
-                    result.detail.searchThreshold,
-                    result.detail.rcAttr.hairType.ordinal(),
-                    result.detail.rcAttr.beardType.ordinal(),
-                    result.detail.rcAttr.hatType.ordinal(),
-                    result.detail.rcAttr.respiratorType.ordinal(),
-                    result.detail.rcAttr.glassesType.ordinal(),
-                    result.detail.rcAttr.skinColorType.ordinal()));
+                      result.trackId,
+                      result.detail.searchScore,
+                      result.detail.searchThreshold,
+                      result.detail.rcAttr.hairType.ordinal(),
+                      result.detail.rcAttr.beardType.ordinal(),
+                      result.detail.rcAttr.hatType.ordinal(),
+                      result.detail.rcAttr.respiratorType.ordinal(),
+                      result.detail.rcAttr.glassesType.ordinal(),
+                      result.detail.rcAttr.skinColorType.ordinal())
+                    );
                   }
                 }
               }
@@ -620,54 +566,9 @@ public class MainActivity extends FlutterActivity {
           continue;
         }
 
-        // PluginResult pluginResultRun = new PluginResult(PluginResult.Status.OK, "picture-taken");
-        // pluginResultRun.setKeepCallback(true);
-        // recognizeThreadCallbackContext.sendPluginResult(pluginResultRun);
-        
-        // Camera mCamera = Camera.open();
-        // try {
-        //   mCamera.setPreviewTexture(new SurfaceTexture(10));
-        // } catch (IOException e1) {
-        //   Log.e(DEBUG_TAG, e1.getMessage());
-        // }
-
-        // Camera.Parameters params = mCamera.getParameters();
-        // params.setPreviewSize(640, 480);
-        // params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        // //params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
-        // //params.setPictureFormat(ImageFormat.JPEG);
-        // params.setPreviewFormat(ImageFormat.NV21);
-        // mCamera.setParameters(params);
-        // mCamera.startPreview();
-        // Camera.PictureCallback pictureCallback =  new Camera.PictureCallback() {
-
-        //   @Override
-        //   public void onPictureTaken(byte[] data, Camera camera) {
-        //     Log.i(DEBUG_TAG, "picture-taken");
-        //     // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, "picture-taken");
-        //     // pluginResult.setKeepCallback(true);
-        //     // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
-        //     //  cameraPreviewData = new CameraPreviewData(data, 640, 480,previewDegreen, front);
-        //     CameraPreviewData cameraPreviewData = new CameraPreviewData(data, 640, 480, previewDegreen, front);
-        //     mFeedFrameQueue.offer(cameraPreviewData);
-        //   }
-        // };
-        // //mCamera.takePicture(null, pictureCallback, null);
-        // mCamera.takePicture(null, null, pictureCallback);
-
-        // if (faceData != null) {
-        //   CameraPreviewData cameraPreviewData1 = new CameraPreviewData(faceData, 1700,2267, previewDegreen, front);
-        //   mFeedFrameQueue.offer(cameraPreviewData1);
-        // }
-
-        // PluginResult pluginResultRun = new PluginResult(PluginResult.Status.OK, "FeedFrameThread run");
-        // pluginResultRun.setKeepCallback(true);
-        // recognizeThreadCallbackContext.sendPluginResult(pluginResultRun);
-
-        // Convert the camera preview frame to the frame format required by the SDK algorithm FacePassImage 
         long startTime = System.currentTimeMillis(); //起始时间
 
-        // Send each frame of FacePassImage into the SDK algorithm and get the returned result 
+        // Send each frame of FacePassImage into the SDK algorithm and get the returned result
         FacePassDetectionResult detectionResult = null;
         try {
           if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
@@ -689,6 +590,7 @@ public class MainActivity extends FlutterActivity {
               e.printStackTrace();
               continue;
             }
+
             FacePassImage imageRGB = new FacePassImage(cameraPreviewData.nv21Data, cameraPreviewData.width, cameraPreviewData.height, cameraRotation, FacePassImageType.NV21);
             detectionResult = mFacePassHandler.feedFrame(imageRGB);
           }
@@ -697,7 +599,7 @@ public class MainActivity extends FlutterActivity {
         }
 
         if (detectionResult == null || detectionResult.faceList.length == 0) {
-          // There is no face detected in the current frame 
+          // There is no face detected in the current frame
           runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -706,7 +608,7 @@ public class MainActivity extends FlutterActivity {
             }
           });
         } else {
-          // Circle the recognized face in the preview interface, and display the face position and angle information on the top 
+          // Circle the recognized face in the preview interface, and display the face position and angle information on the top
           final FacePassFace[] bufferFaceList = detectionResult.faceList;
           runOnUiThread(new Runnable() {
             @Override
@@ -735,9 +637,9 @@ public class MainActivity extends FlutterActivity {
             // Send the attribute information of the recognized face frame
             FacePassTrackOptions[] trackOpts = new FacePassTrackOptions[detectionResult.images.length];
             for (int i = 0; i < detectionResult.images.length; ++i) {
-              if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID && 
+              if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID &&
                   detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.NO_RESPIRATOR) {
-                
+
                 float searchThreshold = 60f;
                 float livenessThreshold = 80f; // -1.0f will not change the liveness threshold
                 float livenessGaThreshold = 85f;
@@ -762,9 +664,6 @@ public class MainActivity extends FlutterActivity {
           Log.i("DEBUG_TAG", "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
         }
         Log.i("]time", String.format("feedframe %d ms", runTime));
-        // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, String.format("feedframe %d ms", runTime));
-        // pluginResult.setKeepCallback(true);
-        // recognizeThreadCallbackContext.sendPluginResult(pluginResult);
       }
     }
 
@@ -775,39 +674,42 @@ public class MainActivity extends FlutterActivity {
     }
   }
 
-  private boolean initializeSDK() {
-    Log.d(DEBUG_TAG, "initializeSDK: ");
+  private boolean initializeAPK() {
+    Log.d(DEBUG_TAG, "initializeAPK: ");
 
-    // mImageCache = new FaceImageCache();
+    mRecognizeDataQueue = new ArrayBlockingQueue<RecognizeData>(5);
+    mFeedFrameQueue = new ArrayBlockingQueue<CameraPreviewData>(1);
 
-    // initView();
     if (!hasPermission()) {
+      Log.d(DEBUG_TAG, "Device Permission: " + hasPermission());
       requestPermission();
-      Log.d(DEBUG_TAG, "PackageManager.PERMISSION_DENIED: " + PackageManager.PERMISSION_DENIED);
-      Log.d(DEBUG_TAG, "hasPermission(): " + hasPermission());
+
+      boolean isPermissionDenied = PackageManager.PERMISSION_DENIED == -1 ? false : true;
+      Log.d(DEBUG_TAG, "Permission Denied: " + isPermissionDenied);
     } else {
       try {
+        Log.d(DEBUG_TAG, "Device Permission: " + hasPermission());
+
         initFacePassSDK();
-        Log.d(DEBUG_TAG, "PackageManager.PERMISSION_DENIED: " + PackageManager.PERMISSION_DENIED);
-        Log.d(DEBUG_TAG, "hasPermission(): " + hasPermission());
       } catch (Exception e) {
         e.printStackTrace();
         Log.e(DEBUG_TAG, "Error: Initialize Facepass SDK");
         return false;
       }
     }
-    
+
     initFaceHandler();
-    
-    // FeedFrameThread mFeedFrameThread = new FeedFrameThread();
-    // mFeedFrameThread.start();
-    
-    // RecognizeThread mRecognizeThread = new RecognizeThread();
-    // mRecognizeThread.start();
+
+    mFeedFrameThread = new FeedFrameThread();
+    mFeedFrameThread.start();
+
+    mRecognizeThread = new RecognizeThread();
+    mRecognizeThread.start();
+
     return true;
   }
 
-  // --- CREATE GROUP 
+  // --- CREATE GROUP
   public boolean createGroup(String groupName) {
     if (mFacePassHandler == null) {
       Log.d(DEBUG_TAG, "FacePassHandle is null ! ");
@@ -836,14 +738,17 @@ public class MainActivity extends FlutterActivity {
     return false;
   }
 
-  // --- ADD FACE 
+  // --- ADD FACE
   public boolean addFace(String bitmapBase64) {
+    DEBUG_TAG = "ADD_FACE";
+    Log.d(DEBUG_TAG, "addFace ");
     byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
     Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
     faceData = decodedString;
     faceBitmap = bitmap;
 
     if (mFacePassHandler == null) {
+      System.out.println("FacePassHandle is null !");
       Log.d(DEBUG_TAG,"FacePassHandle is null !");
       // callbackContext.error("FacePassHandle is null !");
       return false;
@@ -851,6 +756,8 @@ public class MainActivity extends FlutterActivity {
 
     try {
       FacePassAddFaceResult result = mFacePassHandler.addFace(bitmap);
+      boolean isNull = result == null;
+      Log.d(DEBUG_TAG, "result isNUll: " + isNull);
       if (result != null) {
         if (result.result == 0) {
           android.util.Log.d("qujiaqi", "result:" + result
@@ -875,17 +782,17 @@ public class MainActivity extends FlutterActivity {
       }
     } catch (FacePassException e) {
       e.printStackTrace();
+      Log.d(DEBUG_TAG, "add face error");
       // callbackContext.error(e.getMessage());
       return false;
     }
+
+    Log.d(DEBUG_TAG, "add face throws error");
     return false;
   }
 
   // --- Bind Group Face Token
   public boolean bindGroupFaceToken(String groupName, String faceTokenStr) {
-    // PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, groupName + " " + faceTokenStr);
-    // pluginResult.setKeepCallback(true);
-    // callbackContext.sendPluginResult(pluginResult);
 
     byte[] faceToken = faceTokenStr.trim().getBytes();
 
@@ -894,13 +801,13 @@ public class MainActivity extends FlutterActivity {
       Log.d(DEBUG_TAG, "Facepass Handle is null!");
       return false;
     }
-    
+
     if (faceToken == null || faceToken.length == 0 || TextUtils.isEmpty(groupName)) {
       // callbackContext.error("params error！");
       Log.d(DEBUG_TAG, "Params error!");
       return false;
     }
-    
+
     try {
       boolean b = mFacePassHandler.bindGroup(groupName, faceToken);
       String result = b ? "success " : "failed";
