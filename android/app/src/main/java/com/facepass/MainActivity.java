@@ -99,8 +99,8 @@ public class MainActivity extends FlutterActivity {
   ArrayBlockingQueue<RecognizeData> mRecognizeDataQueue;
   ArrayBlockingQueue<CameraPreviewData> mFeedFrameQueue;
 
-  RecognizeThread mRecognizeThread;
-  FeedFrameThread mFeedFrameThread;
+  // RecognizeThread mRecognizeThread;
+  // FeedFrameThread mFeedFrameThread;
 
   // PERMISSION
   private static final int PERMISSIONS_REQUEST = 1;
@@ -178,8 +178,8 @@ public class MainActivity extends FlutterActivity {
             result.success(initializeAPK());
             break;
           case "createGroup":
-            createGroup((String) args.get("groupName"));
-            result.success(true);
+            group_name = (String) args.get("groupName");
+            result.success(createGroup(group_name));
             break;
           case "addFace":
             // addFace(faceBM64);
@@ -188,7 +188,9 @@ public class MainActivity extends FlutterActivity {
             result.success(addFace(faceImage));
             break;
           case "bindGroupFaceToken":
-            bindGroupFaceToken((String) args.get("groupName"), (String) args.get("faceToken"));
+            group_name = (String) args.get("groupName");
+            String faceTokenStr = (String) args.get("faceToken");
+            bindGroupFaceToken(group_name, faceTokenStr);
             result.success(true);
             break;
           case "passFaceData":
@@ -197,8 +199,10 @@ public class MainActivity extends FlutterActivity {
             int height = (int) args.get("height");
 
             mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
-            result.success(args);
             // try calling feed frame and recognize without using threads
+            feedFrame();
+
+            result.success(args);
             break;
           default:
             Log.e(DEBUG_TAG, "unidentified channel");
@@ -493,186 +497,354 @@ public class MainActivity extends FlutterActivity {
     return result;
   }
 
-  private class RecognizeThread extends Thread {
-    boolean isInterrupt;
+  private void recognizeFace() {
+    Log.d(DEBUG_TAG, "!!!!RecognizeThread!!!");
+    try {
+      RecognizeData recognizeData = mRecognizeDataQueue.take();
+      FacePassAgeGenderResult[] ageGenderResult = null;
 
-    @Override
-    public void run() {
-      while (!isInterrupt) {
-        Log.d(DEBUG_TAG, "!!!!RecognizeThread!!!");
-        try {
-          RecognizeData recognizeData = mRecognizeDataQueue.take();
-          FacePassAgeGenderResult[] ageGenderResult = null;
+      checkGroup();
 
-          if (isLocalGroupExist) {
-          //  if (true) {
-            Log.d(DEBUG_TAG, "RecognizeData >>>>");
+      Log.d(DEBUG_TAG, "isLocalGroupExist: " + isLocalGroupExist);
+      if (isLocalGroupExist) {
+        Log.i(DEBUG_TAG, "1");
+      //  if (true) {
+        Log.d(DEBUG_TAG, "RecognizeData >>>>");
 
-            FacePassRecognitionResult[][] recognizeResultArray = mFacePassHandler.recognize(group_name, recognizeData.message, 1, recognizeData.trackOpt);
-            if (recognizeResultArray != null && recognizeResultArray.length > 0) {
-              for (FacePassRecognitionResult[] recognizeResult : recognizeResultArray) {
-                if (recognizeResult != null && recognizeResult.length > 0) {
-                  for (FacePassRecognitionResult result : recognizeResult) {
-                    String faceToken = new String(result.faceToken);
-                    if (FacePassRecognitionState.RECOGNITION_PASS == result.recognitionState) {
-                      getFaceImageByFaceToken(result.trackId, faceToken);
-                      Log.i(DEBUG_TAG, "SUCCESSFULLY RECOGNIZED");
-                    } else {
-                      Log.i(DEBUG_TAG, "FAILED TO RECOGNIZE");
-                    }
-
-                    Log.d(DEBUG_TAG, String.format("recognize trackid: %d, searchScore: %f  searchThreshold: %f, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
-                      result.trackId,
-                      result.detail.searchScore,
-                      result.detail.searchThreshold,
-                      result.detail.rcAttr.hairType.ordinal(),
-                      result.detail.rcAttr.beardType.ordinal(),
-                      result.detail.rcAttr.hatType.ordinal(),
-                      result.detail.rcAttr.respiratorType.ordinal(),
-                      result.detail.rcAttr.glassesType.ordinal(),
-                      result.detail.rcAttr.skinColorType.ordinal())
-                    );
-                  }
+        FacePassRecognitionResult[][] recognizeResultArray = mFacePassHandler.recognize(group_name, recognizeData.message, 1, recognizeData.trackOpt);
+        if (recognizeResultArray != null && recognizeResultArray.length > 0) {
+            Log.i(DEBUG_TAG, "2");
+          for (FacePassRecognitionResult[] recognizeResult : recognizeResultArray) {
+            if (recognizeResult != null && recognizeResult.length > 0) {
+                Log.i(DEBUG_TAG, "3");
+              for (FacePassRecognitionResult result : recognizeResult) {
+                String faceToken = new String(result.faceToken);
+                if (FacePassRecognitionState.RECOGNITION_PASS == result.recognitionState) {
+                  getFaceImageByFaceToken(result.trackId, faceToken);
+                  Log.i(DEBUG_TAG, "SUCCESSFULLY RECOGNIZED");
+                } else {
+                  Log.i(DEBUG_TAG, "FAILED TO RECOGNIZE");
                 }
+
+                Log.d(DEBUG_TAG, String.format("recognize trackid: %d, searchScore: %f  searchThreshold: %f, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
+                  result.trackId,
+                  result.detail.searchScore,
+                  result.detail.searchThreshold,
+                  result.detail.rcAttr.hairType.ordinal(),
+                  result.detail.rcAttr.beardType.ordinal(),
+                  result.detail.rcAttr.hatType.ordinal(),
+                  result.detail.rcAttr.respiratorType.ordinal(),
+                  result.detail.rcAttr.glassesType.ordinal(),
+                  result.detail.rcAttr.skinColorType.ordinal())
+                );
               }
             }
           }
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        } catch (FacePassException e) {
-          e.printStackTrace();
         }
       }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (FacePassException e) {
+      e.printStackTrace();
     }
-
-    @Override
-    public void interrupt() {
-      isInterrupt = true;
-      super.interrupt();
-    }
+    
   }
+
+  // private class RecognizeThread extends Thread {
+  //   boolean isInterrupt;
+
+  //   @Override
+  //   public void run() {
+  //     while (!isInterrupt) {
+  //       Log.d(DEBUG_TAG, "!!!!RecognizeThread!!!");
+  //       try {
+  //         RecognizeData recognizeData = mRecognizeDataQueue.take();
+  //         FacePassAgeGenderResult[] ageGenderResult = null;
+
+  //         checkGroup();
+
+  //         Log.d(DEBUG_TAG, "isLocalGroupExist: " + isLocalGroupExist);
+  //         if (isLocalGroupExist) {
+  //           Log.i(DEBUG_TAG, "1");
+  //         //  if (true) {
+  //           Log.d(DEBUG_TAG, "RecognizeData >>>>");
+
+  //           FacePassRecognitionResult[][] recognizeResultArray = mFacePassHandler.recognize(group_name, recognizeData.message, 1, recognizeData.trackOpt);
+  //           if (recognizeResultArray != null && recognizeResultArray.length > 0) {
+  //                     Log.i(DEBUG_TAG, "2");
+  //             for (FacePassRecognitionResult[] recognizeResult : recognizeResultArray) {
+  //               if (recognizeResult != null && recognizeResult.length > 0) {
+  //                     Log.i(DEBUG_TAG, "3");
+  //                 for (FacePassRecognitionResult result : recognizeResult) {
+  //                   String faceToken = new String(result.faceToken);
+  //                   if (FacePassRecognitionState.RECOGNITION_PASS == result.recognitionState) {
+  //                     getFaceImageByFaceToken(result.trackId, faceToken);
+  //                     Log.i(DEBUG_TAG, "SUCCESSFULLY RECOGNIZED");
+  //                   } else {
+  //                     Log.i(DEBUG_TAG, "FAILED TO RECOGNIZE");
+  //                   }
+
+  //                   Log.d(DEBUG_TAG, String.format("recognize trackid: %d, searchScore: %f  searchThreshold: %f, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
+  //                     result.trackId,
+  //                     result.detail.searchScore,
+  //                     result.detail.searchThreshold,
+  //                     result.detail.rcAttr.hairType.ordinal(),
+  //                     result.detail.rcAttr.beardType.ordinal(),
+  //                     result.detail.rcAttr.hatType.ordinal(),
+  //                     result.detail.rcAttr.respiratorType.ordinal(),
+  //                     result.detail.rcAttr.glassesType.ordinal(),
+  //                     result.detail.rcAttr.skinColorType.ordinal())
+  //                   );
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       } catch (InterruptedException e) {
+  //         e.printStackTrace();
+  //       } catch (FacePassException e) {
+  //         e.printStackTrace();
+  //       }
+  //     }
+  //   }
+
+  //   @Override
+  //   public void interrupt() {
+  //     isInterrupt = true;
+  //     super.interrupt();
+  //   }
+  // }
 
   public static Pair<CameraPreviewData, CameraPreviewData> takeComplexFrame() throws InterruptedException {
     return complexFrameQueue.take();
   }
 
-  private class FeedFrameThread extends Thread {
-    boolean isInterrupt;
+  private void feedFrame() {
+    if (mFacePassHandler == null) {
+      // continue;
+      return;
+    }
 
-    @Override
-    public void run() {
-      while (!isInterrupt) {
-        if (mFacePassHandler == null) {
-          continue;
-        }
+    // long startTime = System.currentTimeMillis(); //起始时间
 
-        long startTime = System.currentTimeMillis(); //起始时间
-
-        // Send each frame of FacePassImage into the SDK algorithm and get the returned result
-        FacePassDetectionResult detectionResult = null;
+    // Send each frame of FacePassImage into the SDK algorithm and get the returned result
+    FacePassDetectionResult detectionResult = null;
+    try {
+      if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
+        Pair<CameraPreviewData, CameraPreviewData> framePair;
         try {
-          if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
-            Pair<CameraPreviewData, CameraPreviewData> framePair;
-            try {
-              framePair = takeComplexFrame();
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-              continue;
-            }
-            FacePassImage imageRGB = new FacePassImage(framePair.first.nv21Data, framePair.first.width, framePair.first.height, cameraRotation, FacePassImageType.NV21);
-            FacePassImage imageIR = new FacePassImage(framePair.second.nv21Data, framePair.second.width, framePair.second.height, cameraRotation, FacePassImageType.NV21);
-            detectionResult = mFacePassHandler.feedFrameRGBIR(imageRGB, imageIR);
-          } else {
-            CameraPreviewData cameraPreviewData = null;
-            try {
-              cameraPreviewData = mFeedFrameQueue.take();
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-              continue;
-            }
-
-            FacePassImage imageRGB = new FacePassImage(cameraPreviewData.nv21Data, cameraPreviewData.width, cameraPreviewData.height, cameraRotation, FacePassImageType.NV21);
-            detectionResult = mFacePassHandler.feedFrame(imageRGB);
-          }
-        } catch (FacePassException e) {
+          framePair = takeComplexFrame();
+        } catch (InterruptedException e) {
           e.printStackTrace();
+          return;
+          // continue;
+        }
+        FacePassImage imageRGB = new FacePassImage(framePair.first.nv21Data, framePair.first.width, framePair.first.height, cameraRotation, FacePassImageType.NV21);
+        FacePassImage imageIR = new FacePassImage(framePair.second.nv21Data, framePair.second.width, framePair.second.height, cameraRotation, FacePassImageType.NV21);
+        detectionResult = mFacePassHandler.feedFrameRGBIR(imageRGB, imageIR);
+      } else {
+        CameraPreviewData cameraPreviewData = null;
+        try {
+          cameraPreviewData = mFeedFrameQueue.take();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+          return;
+          // continue;
         }
 
-        if (detectionResult == null || detectionResult.faceList.length == 0) {
-          // There is no face detected in the current frame
-          runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-              // faceView.clear();
-              // faceView.invalidate();
-            }
-          });
-        } else {
-          // Circle the recognized face in the preview interface, and display the face position and angle information on the top
-          final FacePassFace[] bufferFaceList = detectionResult.faceList;
-          runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-              // showFacePassFace(bufferFaceList);
-            }
-          });
-        }
+        FacePassImage imageRGB = new FacePassImage(cameraPreviewData.nv21Data, cameraPreviewData.width, cameraPreviewData.height, cameraRotation, FacePassImageType.NV21);
+        detectionResult = mFacePassHandler.feedFrame(imageRGB);
+      }
+    } catch (FacePassException e) {
+      e.printStackTrace();
+    }
 
-        if (SDK_MODE == FacePassSDKMode.MODE_OFFLINE) {
-          // Offline mode, add the result that recognizes the face and the message is not empty to the processing queue
-          if (detectionResult != null && detectionResult.message.length != 0) {
-            Log.d(DEBUG_TAG, "mRecognizeDataQueue.offer");
-            // Attribute information of all detected face frames
-            for (int i = 0; i < detectionResult.faceList.length; ++i) {
-              Log.d(DEBUG_TAG, String.format("rc attribute faceList hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
-              detectionResult.faceList[i].rcAttr.hairType.ordinal(),
-              detectionResult.faceList[i].rcAttr.beardType.ordinal(),
-              detectionResult.faceList[i].rcAttr.hatType.ordinal(),
-              detectionResult.faceList[i].rcAttr.respiratorType.ordinal(),
-              detectionResult.faceList[i].rcAttr.glassesType.ordinal(),
-              detectionResult.faceList[i].rcAttr.skinColorType.ordinal()));
-            }
+    // if (detectionResult == null || detectionResult.faceList.length == 0) {
+    //   // There is no face detected in the current frame
+    //   runOnUiThread(new Runnable() {
+    //     @Override
+    //     public void run() {
+    //       // faceView.clear();
+    //       // faceView.invalidate();
+    //     }
+    //   });
+    // } else {
+    //   // Circle the recognized face in the preview interface, and display the face position and angle information on the top
+    //   final FacePassFace[] bufferFaceList = detectionResult.faceList;
+    //   runOnUiThread(new Runnable() {
+    //     @Override
+    //     public void run() {
+    //       // showFacePassFace(bufferFaceList);
+    //     }
+    //   });
+    // }
 
-            Log.d(DEBUG_TAG, "--------------------------------------------------------------------------------------------------------------------------------------------------");
-            // Send the attribute information of the recognized face frame
-            FacePassTrackOptions[] trackOpts = new FacePassTrackOptions[detectionResult.images.length];
-            for (int i = 0; i < detectionResult.images.length; ++i) {
-              if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID &&
-                  detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.NO_RESPIRATOR) {
-
-                float searchThreshold = 60f;
-                float livenessThreshold = 80f; // -1.0f will not change the liveness threshold
-                float livenessGaThreshold = 85f;
-                float smallsearchThreshold = -1.0f; // -1.0f will not change the smallsearch threshold
-                trackOpts[i] = new FacePassTrackOptions(detectionResult.images[i].trackId, searchThreshold, livenessThreshold, livenessGaThreshold, smallsearchThreshold);
-              }
-              Log.d(DEBUG_TAG, String.format("rc attribute in FacePassImage, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
-              detectionResult.images[i].rcAttr.hairType.ordinal(),
-              detectionResult.images[i].rcAttr.beardType.ordinal(),
-              detectionResult.images[i].rcAttr.hatType.ordinal(),
-              detectionResult.images[i].rcAttr.respiratorType.ordinal(),
-              detectionResult.images[i].rcAttr.glassesType.ordinal(),
-              detectionResult.images[i].rcAttr.skinColorType.ordinal()));
-            }
-            RecognizeData mRecData = new RecognizeData(detectionResult.message, trackOpts);
-            mRecognizeDataQueue.offer(mRecData);
-          }
-        }
-        long endTime = System.currentTimeMillis(); // End Time
-        long runTime = endTime - startTime;
+    if (SDK_MODE == FacePassSDKMode.MODE_OFFLINE) {
+      // Offline mode, add the result that recognizes the face and the message is not empty to the processing queue
+      if (detectionResult != null && detectionResult.message.length != 0) {
+        Log.d(DEBUG_TAG, "mRecognizeDataQueue.offer");
+        // Attribute information of all detected face frames
         for (int i = 0; i < detectionResult.faceList.length; ++i) {
-          Log.i("DEBUG_TAG", "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
+          Log.d(DEBUG_TAG, String.format("rc attribute faceList hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
+          detectionResult.faceList[i].rcAttr.hairType.ordinal(),
+          detectionResult.faceList[i].rcAttr.beardType.ordinal(),
+          detectionResult.faceList[i].rcAttr.hatType.ordinal(),
+          detectionResult.faceList[i].rcAttr.respiratorType.ordinal(),
+          detectionResult.faceList[i].rcAttr.glassesType.ordinal(),
+          detectionResult.faceList[i].rcAttr.skinColorType.ordinal()));
         }
-        //Log.i("]time", String.format("feedframe %d ms", runTime));
+
+        Log.d(DEBUG_TAG, "--------------------------------------------------------------------------------------------------------------------------------------------------");
+        // Send the attribute information of the recognized face frame
+        FacePassTrackOptions[] trackOpts = new FacePassTrackOptions[detectionResult.images.length];
+        for (int i = 0; i < detectionResult.images.length; ++i) {
+          if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID &&
+              detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.NO_RESPIRATOR) {
+
+            float searchThreshold = 60f;
+            float livenessThreshold = 80f; // -1.0f will not change the liveness threshold
+            float livenessGaThreshold = 85f;
+            float smallsearchThreshold = -1.0f; // -1.0f will not change the smallsearch threshold
+            trackOpts[i] = new FacePassTrackOptions(detectionResult.images[i].trackId, searchThreshold, livenessThreshold, livenessGaThreshold, smallsearchThreshold);
+          }
+          Log.d(DEBUG_TAG, String.format("rc attribute in FacePassImage, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
+            detectionResult.images[i].rcAttr.hairType.ordinal(),
+            detectionResult.images[i].rcAttr.beardType.ordinal(),
+            detectionResult.images[i].rcAttr.hatType.ordinal(),
+            detectionResult.images[i].rcAttr.respiratorType.ordinal(),
+            detectionResult.images[i].rcAttr.glassesType.ordinal(),
+            detectionResult.images[i].rcAttr.skinColorType.ordinal()));
+        }
+        RecognizeData mRecData = new RecognizeData(detectionResult.message, trackOpts);
+        mRecognizeDataQueue.offer(mRecData);
+        recognizeFace();
       }
     }
-
-    @Override
-    public void interrupt() {
-      isInterrupt = true;
-      super.interrupt();
+    // long endTime = System.currentTimeMillis(); // End Time
+    // long runTime = endTime - startTime;
+    for (int i = 0; i < detectionResult.faceList.length; ++i) {
+      Log.i("DEBUG_TAG", "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
     }
+    //Log.i("]time", String.format("feedframe %d ms", runTime));
   }
+
+  // private class FeedFrameThread extends Thread {
+  //   boolean isInterrupt;
+
+  //   @Override
+  //   public void run() {
+  //     while (!isInterrupt) {
+  //       if (mFacePassHandler == null) {
+  //         continue;
+  //       }
+
+  //       long startTime = System.currentTimeMillis(); //起始时间
+
+  //       // Send each frame of FacePassImage into the SDK algorithm and get the returned result
+  //       FacePassDetectionResult detectionResult = null;
+  //       try {
+  //         if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
+  //           Pair<CameraPreviewData, CameraPreviewData> framePair;
+  //           try {
+  //             framePair = takeComplexFrame();
+  //           } catch (InterruptedException e) {
+  //             e.printStackTrace();
+  //             continue;
+  //           }
+  //           FacePassImage imageRGB = new FacePassImage(framePair.first.nv21Data, framePair.first.width, framePair.first.height, cameraRotation, FacePassImageType.NV21);
+  //           FacePassImage imageIR = new FacePassImage(framePair.second.nv21Data, framePair.second.width, framePair.second.height, cameraRotation, FacePassImageType.NV21);
+  //           detectionResult = mFacePassHandler.feedFrameRGBIR(imageRGB, imageIR);
+  //         } else {
+  //           CameraPreviewData cameraPreviewData = null;
+  //           try {
+  //             cameraPreviewData = mFeedFrameQueue.take();
+  //           } catch (InterruptedException e) {
+  //             e.printStackTrace();
+  //             continue;
+  //           }
+
+  //           FacePassImage imageRGB = new FacePassImage(cameraPreviewData.nv21Data, cameraPreviewData.width, cameraPreviewData.height, cameraRotation, FacePassImageType.NV21);
+  //           detectionResult = mFacePassHandler.feedFrame(imageRGB);
+  //         }
+  //       } catch (FacePassException e) {
+  //         e.printStackTrace();
+  //       }
+
+  //       if (detectionResult == null || detectionResult.faceList.length == 0) {
+  //         // There is no face detected in the current frame
+  //         runOnUiThread(new Runnable() {
+  //           @Override
+  //           public void run() {
+  //             // faceView.clear();
+  //             // faceView.invalidate();
+  //           }
+  //         });
+  //       } else {
+  //         // Circle the recognized face in the preview interface, and display the face position and angle information on the top
+  //         final FacePassFace[] bufferFaceList = detectionResult.faceList;
+  //         runOnUiThread(new Runnable() {
+  //           @Override
+  //           public void run() {
+  //             // showFacePassFace(bufferFaceList);
+  //           }
+  //         });
+  //       }
+
+  //       if (SDK_MODE == FacePassSDKMode.MODE_OFFLINE) {
+  //         // Offline mode, add the result that recognizes the face and the message is not empty to the processing queue
+  //         if (detectionResult != null && detectionResult.message.length != 0) {
+  //           Log.d(DEBUG_TAG, "mRecognizeDataQueue.offer");
+  //           // Attribute information of all detected face frames
+  //           for (int i = 0; i < detectionResult.faceList.length; ++i) {
+  //             Log.d(DEBUG_TAG, String.format("rc attribute faceList hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
+  //             detectionResult.faceList[i].rcAttr.hairType.ordinal(),
+  //             detectionResult.faceList[i].rcAttr.beardType.ordinal(),
+  //             detectionResult.faceList[i].rcAttr.hatType.ordinal(),
+  //             detectionResult.faceList[i].rcAttr.respiratorType.ordinal(),
+  //             detectionResult.faceList[i].rcAttr.glassesType.ordinal(),
+  //             detectionResult.faceList[i].rcAttr.skinColorType.ordinal()));
+  //           }
+
+  //           Log.d(DEBUG_TAG, "--------------------------------------------------------------------------------------------------------------------------------------------------");
+  //           // Send the attribute information of the recognized face frame
+  //           FacePassTrackOptions[] trackOpts = new FacePassTrackOptions[detectionResult.images.length];
+  //           for (int i = 0; i < detectionResult.images.length; ++i) {
+  //             if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID &&
+  //                 detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.NO_RESPIRATOR) {
+
+  //               float searchThreshold = 60f;
+  //               float livenessThreshold = 80f; // -1.0f will not change the liveness threshold
+  //               float livenessGaThreshold = 85f;
+  //               float smallsearchThreshold = -1.0f; // -1.0f will not change the smallsearch threshold
+  //               trackOpts[i] = new FacePassTrackOptions(detectionResult.images[i].trackId, searchThreshold, livenessThreshold, livenessGaThreshold, smallsearchThreshold);
+  //             }
+  //             Log.d(DEBUG_TAG, String.format("rc attribute in FacePassImage, hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
+  //             detectionResult.images[i].rcAttr.hairType.ordinal(),
+  //             detectionResult.images[i].rcAttr.beardType.ordinal(),
+  //             detectionResult.images[i].rcAttr.hatType.ordinal(),
+  //             detectionResult.images[i].rcAttr.respiratorType.ordinal(),
+  //             detectionResult.images[i].rcAttr.glassesType.ordinal(),
+  //             detectionResult.images[i].rcAttr.skinColorType.ordinal()));
+  //           }
+  //           RecognizeData mRecData = new RecognizeData(detectionResult.message, trackOpts);
+  //           mRecognizeDataQueue.offer(mRecData);
+  //         }
+  //       }
+  //       long endTime = System.currentTimeMillis(); // End Time
+  //       long runTime = endTime - startTime;
+  //       for (int i = 0; i < detectionResult.faceList.length; ++i) {
+  //         Log.i("DEBUG_TAG", "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
+  //       }
+  //       //Log.i("]time", String.format("feedframe %d ms", runTime));
+  //     }
+  //   }
+
+  //   @Override
+  //   public void interrupt() {
+  //     isInterrupt = true;
+  //     super.interrupt();
+  //   }
+  // }
 
   private boolean initializeAPK() {
     Log.d(DEBUG_TAG, "initializeAPK: ");
@@ -686,25 +858,23 @@ public class MainActivity extends FlutterActivity {
 
       boolean isPermissionDenied = PackageManager.PERMISSION_DENIED == -1 ? false : true;
       Log.d(DEBUG_TAG, "Permission Denied: " + isPermissionDenied);
-    } else {
-      try {
-        Log.d(DEBUG_TAG, "Device Permission: " + hasPermission());
+    } 
 
-        initFacePassSDK();
-      } catch (Exception e) {
-        e.printStackTrace();
-        Log.e(DEBUG_TAG, "Error: Initialize Facepass SDK");
-        return false;
-      }
+    try {
+      Log.d(DEBUG_TAG, "Device Permission: " + hasPermission());
+      initFacePassSDK();
+      initFaceHandler();
+    } catch (Exception e) {
+      e.printStackTrace();
+      Log.e(DEBUG_TAG, "Error: Initialize Facepass SDK");
+      return false;
     }
 
-    initFaceHandler();
+    // mFeedFrameThread = new FeedFrameThread();
+    // mFeedFrameThread.start();
 
-    mFeedFrameThread = new FeedFrameThread();
-    mFeedFrameThread.start();
-
-    mRecognizeThread = new RecognizeThread();
-    mRecognizeThread.start();
+    // mRecognizeThread = new RecognizeThread();
+    // mRecognizeThread.start();
 
     return true;
   }
@@ -723,25 +893,28 @@ public class MainActivity extends FlutterActivity {
 
     boolean isSuccess = false;
     try {
-      isSuccess = mFacePassHandler.createLocalGroup(groupName);
+      checkGroup();
+      if (!isLocalGroupExist) {
+        isSuccess = mFacePassHandler.createLocalGroup(groupName);
+        isLocalGroupExist = isSuccess;
+        Log.d(DEBUG_TAG,"create group " + isSuccess);
+        return true;
+      }
+      return true;
+      // // callbackContext.success("create group " + groupName + " " + isSuccess);
+      // if (isSuccess && group_name.equals(groupName)) {
+      //   isLocalGroupExist = true;
+      //   group_name = groupName;
+      //   return true;
+      // }
     } catch (FacePassException e) {
       e.printStackTrace();
       return false;
     }
-
-    Log.d(DEBUG_TAG,"create group " + isSuccess);
-    // callbackContext.success("create group " + groupName + " " + isSuccess);
-    if (isSuccess && group_name.equals(groupName)) {
-      isLocalGroupExist = true;
-      group_name = groupName;
-      return true;
-    }
-    return false;
   }
 
   // --- ADD FACE
   public String addFace(String bitmapBase64) {
-    DEBUG_TAG = "ADD_FACE";
     Log.d(DEBUG_TAG, "addFace ");
     byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
     Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
@@ -868,6 +1041,7 @@ public class MainActivity extends FlutterActivity {
   //   //manager.setPreviewDisplay(cameraView);
   //   /* 注册相机回调函数 */
   //   //manager.setListener(this);
-  // }
+  // } 
+
 }
 

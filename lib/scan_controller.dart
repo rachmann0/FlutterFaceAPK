@@ -16,6 +16,8 @@ class ScanController extends GetxController {
   String _groupName = "";
   String _faceToken = "";
 
+  bool isPaused = false;
+
   final RxList<Uint8List> _imageList = RxList([]);
 
   String get faceToken => _faceToken;
@@ -31,7 +33,7 @@ class ScanController extends GetxController {
       _cameras[0] -> Main camera sensor
       _cameras[1] -> Front camera sensor
       _cameras[2/3] -> Tele/Wide Angel camera sensor */
-    _cameraController = CameraController(_cameras[1], ResolutionPreset.medium,
+    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium,
         imageFormatGroup: ImageFormatGroup.nv21);
 
     _cameraController.initialize().then((_) {
@@ -53,8 +55,8 @@ class ScanController extends GetxController {
 
   @override
   void onInit() {
-    InitializeAPK.call(channelName);
     _initCamera();
+    InitializeAPK.call(channelName);
     super.onInit();
   }
 

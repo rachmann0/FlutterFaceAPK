@@ -2,6 +2,7 @@
 import 'package:facepass/helpers/add_face.dart';
 import 'package:facepass/helpers/bind_group_face_token.dart';
 import 'package:facepass/helpers/create_group.dart';
+import 'package:facepass/helpers/inititalizeAPK.dart';
 import 'package:facepass/scan_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -40,7 +41,7 @@ class FacepassLayer extends GetView<ScanController> {
     );
     // return Container();
   }
-
+  
   void openBottomSheet(BuildContext context, TextEditingController inputGroup) {
     Get.bottomSheet(
       backgroundColor: Colors.white,
@@ -60,6 +61,24 @@ class FacepassLayer extends GetView<ScanController> {
               ),
             ),
             const SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: const Size(double.infinity, 40),
+              ),
+              onPressed: () async {
+                InitializeAPK.call(controller.channelName);
+              },
+              child: const Text(
+                "Initialize APK",
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+            ),
+              const SizedBox(
               height: 20,
             ),
             const Text(
@@ -121,8 +140,6 @@ class FacepassLayer extends GetView<ScanController> {
               onPressed: () {
                 controller.setGroupName(inputGroup.text);
                 CreateGroup.call(controller.channelName, controller.groupName);
-                print("CREATE GROUP SUCCESS");
-                print(controller.groupName);
               },
               child: const Text(
                 "Create Group",
