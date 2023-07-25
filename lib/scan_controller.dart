@@ -73,11 +73,7 @@ class ScanController extends GetxController {
 
   void setGroupName(String groupName) {
     _groupName = groupName;
-  }
-
-  void refreshGroupName(String newGroupName) {
-    setGroupName(newGroupName); 
-    update(); 
+    update();
   }
 
   void setFaceToken(String faceToken) {

@@ -139,7 +139,6 @@ class FacepassLayer extends GetView<ScanController> {
               ),
               onPressed: () {
                 controller.setGroupName(inputGroup.text);
-                controller.refreshGroupName(controller.groupName);
                 CreateGroup.call(controller.channelName, controller.groupName);
               },
               child: const Text(
