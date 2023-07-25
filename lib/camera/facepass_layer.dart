@@ -6,7 +6,7 @@ import 'package:facepass/helpers/inititalizeAPK.dart';
 import 'package:facepass/scan_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sprintf/sprintf.dart';
+// import 'package:sprintf/sprintf.dart';
 
 class FacepassLayer extends GetView<ScanController> {
   const FacepassLayer({super.key});
@@ -34,6 +34,7 @@ class FacepassLayer extends GetView<ScanController> {
             ),
             onTap: () {
               openBottomSheet(context, inputGroup);
+              // controller.capture();
             },
           ),
         ),
