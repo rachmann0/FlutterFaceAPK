@@ -32,9 +32,10 @@ class ScanController extends GetxController {
       _cameras[0] -> Main camera sensor
       _cameras[1] -> Front camera sensor
       _cameras[2/3] -> Tele/Wide Angel camera sensor */
-    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium,
-     //   _cameraController = CameraController(_cameras[1], ResolutionPreset.max,
-        imageFormatGroup: ImageFormatGroup.nv21);
+    //_cameraController = CameraController(_cameras[1], ResolutionPreset.medium,
+       _cameraController = CameraController(_cameras[0], ResolutionPreset.max);
+        //imageFormatGroup: ImageFormatGroup.nv21);
+        //imageFormatGroup: ImageFormatGroup.bgra8888);
 
     _cameraController.initialize().then((_) {
       _isInitialized.value = true;
@@ -68,6 +69,7 @@ class ScanController extends GetxController {
   }
 
   void capture(CameraImage cameraImage) {
+    //print(cameraImage.planes.length);
     PassFaceData.call(channelName, cameraImage.planes[0].bytes,
         cameraImage.width, cameraImage.height);
   }

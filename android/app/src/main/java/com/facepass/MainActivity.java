@@ -65,7 +65,7 @@ public class MainActivity extends FlutterActivity {
   private static final String TAG = "MyActivity";
 
   // GROUP
-  String group_name = "";
+  String group_name = "facepass";
   private boolean isLocalGroupExist = false;
 
 
@@ -200,6 +200,7 @@ public class MainActivity extends FlutterActivity {
 
             //mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
             // try calling feed frame and recognize without using threads
+            //android.util.Log.d(DEBUG_TAG, "feedFrame");
             feedFrame(new CameraPreviewData(byteData, width, height, previewDegreen, front));
 
             result.success(args);
@@ -507,7 +508,7 @@ public class MainActivity extends FlutterActivity {
 
       Log.d(DEBUG_TAG, "isLocalGroupExist: " + isLocalGroupExist);
       if (isLocalGroupExist) {
-        Log.i(DEBUG_TAG, "1");
+        //Log.i(DEBUG_TAG, "1");
       //  if (true) {
         Log.d(DEBUG_TAG, "RecognizeData >>>>");
 
@@ -665,29 +666,36 @@ public class MainActivity extends FlutterActivity {
       e.printStackTrace();
     }
 
-    // if (detectionResult == null || detectionResult.faceList.length == 0) {
-    //   // There is no face detected in the current frame
-    //   runOnUiThread(new Runnable() {
-    //     @Override
-    //     public void run() {
-    //       // faceView.clear();
-    //       // faceView.invalidate();
-    //     }
-    //   });
-    // } else {
-    //   // Circle the recognized face in the preview interface, and display the face position and angle information on the top
-    //   final FacePassFace[] bufferFaceList = detectionResult.faceList;
-    //   runOnUiThread(new Runnable() {
-    //     @Override
-    //     public void run() {
-    //       // showFacePassFace(bufferFaceList);
-    //     }
-    //   });
-    // }
+     if (detectionResult == null || detectionResult.faceList.length == 0) {
+       // There is no face detected in the current frame
+       //Log.d(DEBUG_TAG, "There is no face detected in the current frame");
+/*
+       runOnUiThread(new Runnable() {
+         @Override
+         public void run() {
+           // faceView.clear();
+           // faceView.invalidate();
+         }
+       });
+*/
+     } else {
+       // Circle the recognized face in the preview interface, and display the face position and angle information on the top
+       final FacePassFace[] bufferFaceList = detectionResult.faceList;
+/*
+       runOnUiThread(new Runnable() {
+         @Override
+         public void run() {
+           // showFacePassFace(bufferFaceList);
+         }
+       });
+*/
+     }
 
     if (SDK_MODE == FacePassSDKMode.MODE_OFFLINE) {
       // Offline mode, add the result that recognizes the face and the message is not empty to the processing queue
+      //if (detectionResult != null && detectionResult.faceList.length != 0) {
       if (detectionResult != null && detectionResult.message.length != 0) {
+      android.util.Log.d(DEBUG_TAG, "detectionResult.message: " + detectionResult.message);
         Log.d(DEBUG_TAG, "mRecognizeDataQueue.offer");
         // Attribute information of all detected face frames
         for (int i = 0; i < detectionResult.faceList.length; ++i) {
@@ -723,13 +731,16 @@ public class MainActivity extends FlutterActivity {
         }
         RecognizeData mRecData = new RecognizeData(detectionResult.message, trackOpts);
         //mRecognizeDataQueue.offer(mRecData);
+        Log.d(DEBUG_TAG, "recognizeFace input");
         recognizeFace(mRecData);
       }
     }
     // long endTime = System.currentTimeMillis(); // End Time
     // long runTime = endTime - startTime;
+    //if (detectionResult != null) Log.d(DEBUG_TAG, "detectionResult not null");
+    //if (detectionResult.message.length != 0) Log.d(DEBUG_TAG, "detectionResult.message.length != 0");
     for (int i = 0; i < detectionResult.faceList.length; ++i) {
-      Log.i("DEBUG_TAG", "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
+      Log.i(DEBUG_TAG, "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
     }
     //Log.i("]time", String.format("feedframe %d ms", runTime));
   }
