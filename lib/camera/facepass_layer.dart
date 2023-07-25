@@ -41,7 +41,7 @@ class FacepassLayer extends GetView<ScanController> {
     );
     // return Container();
   }
-  
+
   void openBottomSheet(BuildContext context, TextEditingController inputGroup) {
     Get.bottomSheet(
       backgroundColor: Colors.white,
@@ -78,7 +78,7 @@ class FacepassLayer extends GetView<ScanController> {
                 ),
               ),
             ),
-              const SizedBox(
+            const SizedBox(
               height: 20,
             ),
             const Text(
@@ -110,9 +110,9 @@ class FacepassLayer extends GetView<ScanController> {
             const SizedBox(
               height: 20,
             ),
-            Text(
-              sprintf("%s %s", ["Group: ", controller.groupName]),
-              style: const TextStyle(
+            const Text(
+              "Group",
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -139,6 +139,7 @@ class FacepassLayer extends GetView<ScanController> {
               ),
               onPressed: () {
                 controller.setGroupName(inputGroup.text);
+                controller.refreshGroupName(controller.groupName);
                 CreateGroup.call(controller.channelName, controller.groupName);
               },
               child: const Text(
@@ -157,11 +158,8 @@ class FacepassLayer extends GetView<ScanController> {
                 minimumSize: const Size(double.infinity, 40),
               ),
               onPressed: () {
-                BindGroupFaceToken.call(
-                  controller.channelName,
-                  controller.groupName, 
-                  controller.faceToken
-                );
+                BindGroupFaceToken.call(controller.channelName,
+                    controller.groupName, controller.faceToken);
               },
               child: const Text(
                 "Bind Group",

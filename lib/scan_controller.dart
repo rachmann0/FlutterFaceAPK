@@ -4,7 +4,6 @@ import 'package:facepass/helpers/pass_face_data.dart';
 import 'package:get/state_manager.dart';
 
 import 'helpers/inititalizeAPK.dart';
-// import 'package:image/image.dart' as imglib;
 
 class ScanController extends GetxController {
   final String _channelName = "com.facepass/channel";
@@ -33,7 +32,7 @@ class ScanController extends GetxController {
       _cameras[0] -> Main camera sensor
       _cameras[1] -> Front camera sensor
       _cameras[2/3] -> Tele/Wide Angel camera sensor */
-    _cameraController = CameraController(_cameras[0], ResolutionPreset.medium,
+    _cameraController = CameraController(_cameras[1], ResolutionPreset.medium,
         imageFormatGroup: ImageFormatGroup.nv21);
 
     _cameraController.initialize().then((_) {
@@ -74,6 +73,11 @@ class ScanController extends GetxController {
 
   void setGroupName(String groupName) {
     _groupName = groupName;
+  }
+
+  void refreshGroupName(String newGroupName) {
+    setGroupName(newGroupName); 
+    update(); 
   }
 
   void setFaceToken(String faceToken) {
