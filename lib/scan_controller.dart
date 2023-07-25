@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:facepass/helpers/pass_face_data.dart';
 import 'package:get/state_manager.dart';
-
+import 'package:image/image.dart' as img;
 import 'helpers/inititalizeAPK.dart';
 
 class ScanController extends GetxController {
@@ -35,7 +35,7 @@ class ScanController extends GetxController {
     _cameraController = CameraController(_cameras[1], ResolutionPreset.medium,
         imageFormatGroup: ImageFormatGroup.nv21);
 
-    _cameraController.initialize().then((_) {
+    _cameraController.initialize().then((_) async {
       _isInitialized.value = true;
       _cameraController.startImageStream((image) => capture(image));
     }).catchError((Object e) {
@@ -53,9 +53,10 @@ class ScanController extends GetxController {
   }
 
   @override
-  void onInit() {
-    _initCamera();
+  void onInit() async {
+    await _initCamera();
     InitializeAPK.call(channelName);
+
     super.onInit();
   }
 
@@ -66,14 +67,17 @@ class ScanController extends GetxController {
     super.dispose();
   }
 
-  void capture(CameraImage cameraImage) {
-    PassFaceData.call(channelName, cameraImage.planes[0].bytes,
-        cameraImage.width, cameraImage.height);
+  void capture(CameraImage cameraImage) async {
+    // final image = await _cameraController.takePicture();
+    // Uint8List bytes = await image.readAsBytes();
+
+    // print(cameraImage.width);
+    // print(cameraImage.height);
+    PassFaceData.call(channelName, cameraImage.planes[0].bytes, cameraImage.height, cameraImage.width);
   }
 
   void setGroupName(String groupName) {
     _groupName = groupName;
-    update();
   }
 
   void setFaceToken(String faceToken) {
