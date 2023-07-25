@@ -96,8 +96,8 @@ public class MainActivity extends FlutterActivity {
 
   private boolean ageGenderEnabledGlobal;
 
-  ArrayBlockingQueue<RecognizeData> mRecognizeDataQueue;
-  ArrayBlockingQueue<CameraPreviewData> mFeedFrameQueue;
+  //ArrayBlockingQueue<RecognizeData> mRecognizeDataQueue;
+  //ArrayBlockingQueue<CameraPreviewData> mFeedFrameQueue;
 
   // RecognizeThread mRecognizeThread;
   // FeedFrameThread mFeedFrameThread;
@@ -198,9 +198,9 @@ public class MainActivity extends FlutterActivity {
             int width = (int) args.get("width");
             int height = (int) args.get("height");
 
-            mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
+            //mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
             // try calling feed frame and recognize without using threads
-            feedFrame();
+            feedFrame(new CameraPreviewData(byteData, width, height, previewDegreen, front));
 
             result.success(args);
             break;
@@ -497,10 +497,10 @@ public class MainActivity extends FlutterActivity {
     return result;
   }
 
-  private void recognizeFace() {
+  private void recognizeFace(RecognizeData recognizeData) {
     Log.d(DEBUG_TAG, "!!!!RecognizeThread!!!");
     try {
-      RecognizeData recognizeData = mRecognizeDataQueue.take();
+      //RecognizeData recognizeData = mRecognizeDataQueue.take();
       FacePassAgeGenderResult[] ageGenderResult = null;
 
       checkGroup();
@@ -542,12 +542,14 @@ public class MainActivity extends FlutterActivity {
           }
         }
       }
+    } catch (Exception e) {
+      e.printStackTrace();
+/*
     } catch (InterruptedException e) {
       e.printStackTrace();
-    } catch (FacePassException e) {
-      e.printStackTrace();
+*/
     }
-    
+
   }
 
   // private class RecognizeThread extends Thread {
@@ -619,7 +621,7 @@ public class MainActivity extends FlutterActivity {
     return complexFrameQueue.take();
   }
 
-  private void feedFrame() {
+  private void feedFrame(CameraPreviewData cameraPreviewData) {
     if (mFacePassHandler == null) {
       // continue;
       return;
@@ -643,11 +645,15 @@ public class MainActivity extends FlutterActivity {
         FacePassImage imageIR = new FacePassImage(framePair.second.nv21Data, framePair.second.width, framePair.second.height, cameraRotation, FacePassImageType.NV21);
         detectionResult = mFacePassHandler.feedFrameRGBIR(imageRGB, imageIR);
       } else {
-        CameraPreviewData cameraPreviewData = null;
+        //CameraPreviewData cameraPreviewData = null;
         try {
-          cameraPreviewData = mFeedFrameQueue.take();
+          //cameraPreviewData = mFeedFrameQueue.take();
+        } catch (Exception e) {
+          e.printStackTrace();
+/*
         } catch (InterruptedException e) {
           e.printStackTrace();
+*/
           return;
           // continue;
         }
@@ -716,8 +722,8 @@ public class MainActivity extends FlutterActivity {
             detectionResult.images[i].rcAttr.skinColorType.ordinal()));
         }
         RecognizeData mRecData = new RecognizeData(detectionResult.message, trackOpts);
-        mRecognizeDataQueue.offer(mRecData);
-        recognizeFace();
+        //mRecognizeDataQueue.offer(mRecData);
+        recognizeFace(mRecData);
       }
     }
     // long endTime = System.currentTimeMillis(); // End Time
@@ -849,8 +855,10 @@ public class MainActivity extends FlutterActivity {
   private boolean initializeAPK() {
     Log.d(DEBUG_TAG, "initializeAPK: ");
 
+/*
     mRecognizeDataQueue = new ArrayBlockingQueue<RecognizeData>(5);
     mFeedFrameQueue = new ArrayBlockingQueue<CameraPreviewData>(1);
+*/
 
     if (!hasPermission()) {
       Log.d(DEBUG_TAG, "Device Permission: " + hasPermission());
