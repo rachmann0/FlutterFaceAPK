@@ -1,4 +1,4 @@
-package megvii.testfacepass.utils;
+package com.facepass.utils;
 
 import android.content.ContentUris;
 import android.content.Context;
