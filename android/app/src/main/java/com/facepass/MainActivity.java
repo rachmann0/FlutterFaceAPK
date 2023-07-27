@@ -7,6 +7,7 @@ import io.flutter.plugin.common.MethodChannel;
 
 import java.util.Map;
 import java.util.HashMap;
+import android.util.Base64;
 
 import android.Manifest;
 import android.app.Activity;
@@ -331,33 +332,28 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
           case "initializeAPK":
             result.success(initializeAPK());
             break;
-          // case "createGroup":
-          //   group_name = (String) args.get("groupName");
-          //   result.success(createGroup(group_name));
-          //   break;
-          // case "addFace":
-          //   // addFace(faceBM64);
-          //   Log.d(DEBUG_TAG, "invoke add face");
-          //   String faceImage = (String) args.get("data");
-          //   result.success(addFace(faceImage));
-          //   break;
-          // case "bindGroupFaceToken":
-          //   group_name = (String) args.get("groupName");
-          //   String faceTokenStr = (String) args.get("faceToken");
-          //   bindGroupFaceToken(group_name, faceTokenStr);
-          //   result.success(true);
-          //   break;
-          // case "passFaceData":
-          //   byte[] byteData = (byte[]) args.get("byteData");
-          //   int width = (int) args.get("width");
-          //   int height = (int) args.get("height");
+          case "createGroup":
+            result.success(createGroup((String) args.get("groupName")));
+            break;
+          case "addFace":
+            // addFace(faceBM64);
+            result.success(addFace((String) args.get("data")));
+            break;
+          case "bindGroupFaceToken":
+            bindGroupFaceToken((String) args.get("groupName"), (String) args.get("faceToken"));
+            result.success(true);
+            break;
+          case "passFaceData":
+            byte[] byteData = (byte[]) args.get("byteData");
+            int width = (int) args.get("width");
+            int height = (int) args.get("height");
 
-          //   mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
-          //   // try calling feed frame and recognize without using threads
-          //   feedFrame();
+            mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
+            // try calling feed frame and recognize without using threads
+            // feedFrame();
 
-          //   result.success(args);
-          //   break;
+            result.success(args);
+            break;
           default:
             Log.e(DEBUG_TAG, "unidentified channel");
             result.notImplemented();
@@ -400,6 +396,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     mRecognizeThread.start();
     mFeedFrameThread = new FeedFrameThread();
     mFeedFrameThread.start();
+
     return true;
   }
 
@@ -467,13 +464,13 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         auth_status = FacePassHandler.authCheck();
       }
 
-      if ( !auth_status ) {
+      if (!auth_status) {
         Log.d(DEBUG_TAG, "Authentication result : failed.");
         Log.d("mcvsafe", "Authentication result : failed.");
 
         // Authorization is unsuccessful, handle it according to business needs
         return;
-      }else {
+      } else {
         Log.d("mcvsafe", "Authentication result : success.");
       }
     } else {
@@ -621,7 +618,6 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         if (groupName.equals(group)) {
           isLocalGroupExist = true;
           return true;
-          break;
         }
       }
       if (!isLocalGroupExist) {
@@ -637,6 +633,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
       e.printStackTrace();
       return false;
     }
+    return false;
   }
 
   private class FeedFrameThread extends Thread {
@@ -762,6 +759,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
   }
 
   public boolean createGroup(String groupName) {
+    Log.d(DEBUG_TAG, "CREATE GROUP >>>");
     if (mFacePassHandler == null) {
       // toast("FacePassHandle is null ! ");
       return false;
@@ -785,7 +783,8 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         e.printStackTrace();
         return false;
       }
-    }
+    } 
+    return true;
     // toast("create group " + isSuccess);
   }
 
@@ -889,12 +888,31 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     }
   }
 
+  private void showRecognizeResult(final long trackId, final float searchScore, final float livenessScore, final boolean isRecognizeOK) {
+    mAndroidHandler.post(new Runnable() {
+      @Override
+      public void run() {
+        faceEndTextView.append("ID = " + trackId + (isRecognizeOK ? "Successful Recognition" : "Recognition Failed") + "\n");
+        Log.d(DEBUG_TAG, "ID = " + trackId + (isRecognizeOK ? "Successful Recognition" : "Recognition Failed") + "\n");
+
+        faceEndTextView.append("Recognition Score = " + searchScore + "\n");
+        Log.d(DEBUG_TAG, "Recognition Score = " + searchScore + "\n");
+
+        faceEndTextView.append("Living Body Fraction = " + livenessScore + "\n");
+        Log.d(DEBUG_TAG, "Living Body Fraction = " + livenessScore + "\n");
+        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+      }
+    });
+  }
+
   public void showRecognizeResult(final long trackId, final float searchScore, final float livenessScore, final boolean isRecognizeOK, final float age, final int gender) {
     mAndroidHandler.post(new Runnable() {
       @Override
       public void run() {
-        faceEndTextView.append("Recognition Score = " + searchScore + "\n");
         Log.d(DEBUG_TAG, "ID = " + trackId + (isRecognizeOK ? "Successful Recognition" : "Recognition Failed") + "\n");
+
+        faceEndTextView.append("Recognition Score = " + searchScore + "\n");
+        Log.d(DEBUG_TAG, "Recognition Score = " + searchScore + "\n");
 
         faceEndTextView.append("Living Body Fraction = " + livenessScore + "\n");
         Log.d(DEBUG_TAG, "Living Body Fraction = " + livenessScore + "\n");
@@ -960,6 +978,81 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
       e.printStackTrace();
     }
   }
+
+  public String addFace(String bitmapBase64) {
+    Log.d(DEBUG_TAG, "ADD FACE >>>");
+    byte[] decodedString = Base64.decode(bitmapBase64, Base64.DEFAULT);
+    Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+    byte[] faceData = decodedString;
+    Bitmap faceBitmap = bitmap;
+
+    if (mFacePassHandler == null) {
+      System.out.println("FacePassHandle is null !");
+      Log.d(DEBUG_TAG,"FacePassHandle is null !");
+      return "";
+    }
+
+    try {
+      FacePassAddFaceResult result = mFacePassHandler.addFace(bitmap);
+      boolean isNull = result == null;
+      Log.d(DEBUG_TAG, "result isNUll: " + isNull);
+      if (result != null) {
+        if (result.result == 0) {
+          android.util.Log.d("qujiaqi", "result:" + result
+            + ",bl:" + result.blur
+            + ",pp:" + result.pose.pitch
+            + ",pr:" + result.pose.roll
+            + ",py" + result.pose.yaw);
+
+          byte[] faceToken = result.faceToken;
+          Log.d(DEBUG_TAG, "add face successfully! ");
+          Log.d(DEBUG_TAG, new String(result.faceToken));
+          return new String(result.faceToken);
+        } else if (result.result == 1) {
+          Log.d(DEBUG_TAG, "no face ！");
+          return "";
+        } else {
+          Log.d(DEBUG_TAG, "quality problem！");
+          return "";
+        }
+      }
+    } catch (FacePassException e) {
+      e.printStackTrace();
+      Log.d(DEBUG_TAG, "add face error");
+      return "";
+    }
+
+    Log.d(DEBUG_TAG, "add face throws error");
+    return "";
+  }
+
+    // --- Bind Group Face Token
+  public boolean bindGroupFaceToken(String groupName, String faceTokenStr) {
+
+    byte[] faceToken = faceTokenStr.trim().getBytes();
+
+    if (mFacePassHandler == null) {
+      Log.d(DEBUG_TAG, "Facepass Handle is null!");
+      return false;
+    }
+
+    if (faceToken == null || faceToken.length == 0 || TextUtils.isEmpty(groupName)) {
+      Log.d(DEBUG_TAG, "Params error!");
+      return false;
+    }
+
+    try {
+      boolean b = mFacePassHandler.bindGroup(groupName, faceToken);
+      String result = b ? "success " : "failed";
+      Log.d(DEBUG_TAG, "bind  " + result);
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      Log.d(DEBUG_TAG, e.getMessage());
+      return false;
+    }
+  }
+
 
 }
 

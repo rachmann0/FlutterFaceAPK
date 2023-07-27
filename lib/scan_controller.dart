@@ -1,9 +1,9 @@
-import 'dart:io';
+// import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:facepass/helpers/pass_face_data.dart';
 import 'package:get/state_manager.dart';
-import 'package:image/image.dart' as img;
+// import 'package:image/image.dart' as img;
 import 'helpers/inititalizeAPK.dart';
 
 class ScanController extends GetxController {
@@ -75,8 +75,8 @@ class ScanController extends GetxController {
 
     // print(cameraImage.width);
     // print(cameraImage.height);
-    // PassFaceData.call(channelName, cameraImage.planes[0].bytes,
-    //     cameraImage.height, cameraImage.width);
+    PassFaceData.call(channelName, cameraImage.planes[0].bytes,
+        cameraImage.height, cameraImage.width);
   }
 
   void setGroupName(String groupName) {
