@@ -55,10 +55,9 @@ class ScanController extends GetxController {
   }
 
   @override
-  void onInit() async {
-    await _initCamera();
+  void onInit() {
+    _initCamera();
     InitializeAPK.call(channelName);
-
     super.onInit();
   }
 
@@ -70,13 +69,14 @@ class ScanController extends GetxController {
     super.dispose();
   }
 
-  void capture(CameraImage cameraImage) async {
+  void capture(CameraImage cameraImage) {
     // final image = await _cameraController.takePicture();
     // Uint8List bytes = await image.readAsBytes();
 
     // print(cameraImage.width);
     // print(cameraImage.height);
-    PassFaceData.call(channelName, cameraImage.planes[0].bytes, cameraImage.height, cameraImage.width);
+    // PassFaceData.call(channelName, cameraImage.planes[0].bytes,
+    //     cameraImage.height, cameraImage.width);
   }
 
   void setGroupName(String groupName) {

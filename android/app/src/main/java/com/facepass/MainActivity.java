@@ -146,57 +146,57 @@ public class MainActivity extends FlutterActivity {
 
   private static final String DEBUG_TAG = "FacePass";
 
-  // 需要客户根据自己需求配置
+  // Customers need to configure according to their own needs
   private static final String authIP = "https://api-cn.faceplusplus.com";
   public static final String apiKey = "";
   public static final String apiSecret = "";
 
 public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Trial-one-stage.cert";
 
-  /* 根据需求配置单目 / 双目场景，默认单目 */
+  /* Configure monocular/binocular scenes according to requirements, the default is monocular */
   private static FacePassCameraType CamType = FacePassCameraType.FACEPASS_SINGLECAM;
 
-  /* 根据需求配置授权 mcvface / mcvsafe ，默认mcvface */
+  /* Configure and authorize mcvface / mcvsafe according to requirements, the default is mcvface */
   // private static FacePassAuthType authType = FacePassAuthType.FASSPASS_AUTH_MCVFACE;
   private static FacePassAuthType authType = FacePassAuthType.FACEPASS_AUTH_MCVSAFE;
 
-  /* 人脸识别Group */
+  /* Face Recognition Group */
   private static final String group_name = "facepass";
 
-  /* 程序所需权限 ：相机 文件存储 网络访问 */
+  /* Permissions required by the program: camera file storage network access */
   private static final int PERMISSIONS_REQUEST = 1;
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
-  private static final String PERMISSION_WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-  private static final String PERMISSION_READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
+  // private static final String PERMISSION_WRITE_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+  // private static final String PERMISSION_READ_STORAGE = Manifest.permission.READ_EXTERNAL_STORAGE;
   private static final String PERMISSION_INTERNET = Manifest.permission.INTERNET;
   private static final String PERMISSION_ACCESS_NETWORK_STATE = Manifest.permission.ACCESS_NETWORK_STATE;
-  private String[] Permission = new String[]{PERMISSION_CAMERA, PERMISSION_WRITE_STORAGE, PERMISSION_READ_STORAGE, PERMISSION_INTERNET, PERMISSION_ACCESS_NETWORK_STATE};
+  private String[] Permission = new String[]{PERMISSION_CAMERA, PERMISSION_INTERNET, PERMISSION_ACCESS_NETWORK_STATE};
 
-  /* SDK 实例对象 */
+  /* SDK instance object */
   FacePassHandler mFacePassHandler;
 
-  /* 相机实例 */
+  /* camera instance */
   private CameraManager manager;
   private CameraManager mIRCameraManager;
 
-  /* 显示人脸位置角度信息 */
+  /* Display face position angle information */
   // private TextView faceBeginTextView;
 
-  /* 显示faceId */
+  /* show faceId */
   private TextView faceEndTextView;
 
-  /* 相机预览界面 */
+  /* Camera preview interface */
   private CameraPreview cameraView;
   private CameraPreview mIRCameraView;
 
   private boolean isLocalGroupExist = false;
 
-  /* 在预览界面圈出人脸 */
+  /* Circle the face in the preview interface */
   // private FaceView faceView;
 
   private ScrollView scrollView;
 
-  /* 相机是否使用前置摄像头 */
+  /* Whether the camera uses the front camera */
   private static boolean cameraFacingFront = true;
   /* 相机图片旋转角度，请根据实际情况来设置
   * 对于标准设备，可以如下计算旋转角度rotation
@@ -259,12 +259,12 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
   FeedFrameThread mFeedFrameThread;
 
 
-  /*底库同步*/
+  /*Base Storage Synchronization*/
   private ImageView mSyncGroupBtn;
   private AlertDialog mSyncGroupDialog;
 
   private ImageView mFaceOperationBtn;
-  /*图片缓存*/
+  /*image cache*/
   // private FaceImageCache mImageCache;
 
   private Handler mAndroidHandler;
@@ -328,9 +328,9 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
           result.success(response);*/
 
         switch (call.method) {
-          // case "initializeAPK":
-          //   result.success(initializeAPK());
-          //   break;
+          case "initializeAPK":
+            result.success(initializeAPK());
+            break;
           // case "createGroup":
           //   group_name = (String) args.get("groupName");
           //   result.success(createGroup(group_name));
@@ -366,27 +366,23 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     );
   }
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    Log.d(DEBUG_TAG, "onCreate");
-
-    super.onCreate(savedInstanceState);
+  // @Override
+  private boolean initializeAPK() {
+    Log.d(DEBUG_TAG, "initializeAPK");
     // mImageCache = new FaceImageCache();
     mRecognizeDataQueue = new ArrayBlockingQueue<RecognizeData>(5);
     mFeedFrameQueue = new ArrayBlockingQueue<CameraPreviewData>(1);
     initAndroidHandler();
 
-    /* 初始化界面 */
+    /* Initialization interface */
     // initView();
 
-    /* 申请程序所需权限 */
+    /* Permissions required for the application process */
     if (!hasPermission()) {
       requestPermission();
       Log.d(DEBUG_TAG, "PackageManager.PERMISSION_DENIED: " + PackageManager.PERMISSION_DENIED);
       Log.d(DEBUG_TAG, "hasPermission(): " + hasPermission());
       Log.d(DEBUG_TAG, "checkSelfPermission(PERMISSION_CAMERA): " + checkSelfPermission(PERMISSION_CAMERA));
-      Log.d(DEBUG_TAG, "checkSelfPermission(PERMISSION_READ_STORAGE): " + checkSelfPermission(PERMISSION_READ_STORAGE));
-      Log.d(DEBUG_TAG, "checkSelfPermission(PERMISSION_WRITE_STORAGE): " + checkSelfPermission(PERMISSION_WRITE_STORAGE));
       Log.d(DEBUG_TAG, "checkSelfPermission(PERMISSION_INTERNET): " + checkSelfPermission(PERMISSION_INTERNET));
       Log.d(DEBUG_TAG, "checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE): " + checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE));
     } else {
@@ -394,6 +390,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         initFacePassSDK();
       } catch (IOException e) {
         e.printStackTrace();
+        return false;
       }
     }
 
@@ -403,6 +400,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     mRecognizeThread.start();
     mFeedFrameThread = new FeedFrameThread();
     mFeedFrameThread.start();
+    return true;
   }
 
   private void initAndroidHandler() {
@@ -410,10 +408,6 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
   }
 
   private void singleCertification(Context mContext) throws IOException {
-    // String cert = FileUtil.readExternal(CERT_PATH).trim();
-    
-    // String cert = "\"{\"\"serial\"\":\"\"z0005a8759f61d5f4b2862852034c139ddada\"\",\"\"key\"\":\"\"2a6a6e824b1bfb87553faecb38faf4122936055c915fb3ac814c8879994d1542f304999e02ec2ff25d278b110695b76980b3002d57d2f4f20d779f2ffc95e1bac4ff713f244ad0d7da10a0491ee0fbfce6c9ee0f4a8fd42f0fb17ef56070773c73272014a60096f06154620fa427ea3b0dbace0ec3d7a9b59e4cb9775da41275d6fe6b904539f59910ad012bc89dc86d3fd43af436040a036375767226261a30e9d05e87c89f821b9875da230409f7d66748bcfc9f8281cf802305a8664739f3354a3d13565b16ce\"\"}\"\n".trim();
-    // String cert = "\"{\"\"serial\"\":\"\"z0005a8759f61d5f4b2862852034c139ddada\"\",\"\"key\"\":\"\"2a6a6e824b1bfb87553faecb38faf4122936055c915fb3ac814c8879994d1542f304999e02ec2ff25d278b110695b76980b3002d57d2f4f20d779f2ffc95e1bac4ff713f244ad0d7da10a0491ee0fbfce6c9ee0f4a8fd42f0fb17ef56070773c73272014a60096f06154620fa427ea3b0dbace0ec3d7a9b59e4cb9775da41275d6fe6b904539f59910ad012bc89dc86d3fd43af436040a036375767226261a30e9d05e87c89f821b9875da230409f7d66748bcfc9f8281cf802305a8664739f3354a3d13565b16ce\"\"}\"\n";
     String cert = "\"{\"\"serial\"\":\"\"z0005a8759f61d5f4b2862852034c139ddada\"\",\"\"key\"\":\"\"2a6a6e824b1bfb87553faecb38faf4122936055c915fb3ac814c8879994d1542f304999e02ec2ff25d278b110695b76980b3002d57d2f4f20d779f2ffc95e1bac4ff713f244ad0d7da10a0491ee0fbfce6c9ee0f4a8fd42f0fb17ef56070773c73272014a60096f06154620fa427ea3b0dbace0ec3d7a9b59e4cb9775da41275d6fe6b904539f59910ad012bc89dc86d3fd43af436040a036375767226261a30e9d05e87c89f821b9875da230409f7d66748bcfc9f8281cf802305a8664739f3354a3d13565b16ce\"\"}\"\n".trim();
     if(TextUtils.isEmpty(cert)){
       Log.d("mcvsafe", "cert is null");
@@ -460,13 +454,13 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     FacePassHandler.initSDK(mContext);
     if (authType == FacePassAuthType.FASSPASS_AUTH_MCVFACE) {
       
-      // face++授权
+      // face++ authorization
       FacePassHandler.authPrepare(getApplicationContext());
       FacePassHandler.getAuth(authIP, apiKey, apiSecret, true);
     } else if (authType == FacePassAuthType.FACEPASS_AUTH_MCVSAFE) {
       Log.d(DEBUG_TAG, "authType = FACEPASS_AUTH_MCVSAFE");
 
-      // 金雅拓授权接口
+      // Authorized Interface
       boolean auth_status = FacePassHandler.authCheck();
       if ( !auth_status ) {
         singleCertification(mContext);
@@ -477,7 +471,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         Log.d(DEBUG_TAG, "Authentication result : failed.");
         Log.d("mcvsafe", "Authentication result : failed.");
 
-        // 授权不成功，根据业务需求处理
+        // Authorization is unsuccessful, handle it according to business needs
         return;
       }else {
         Log.d("mcvsafe", "Authentication result : success.");
@@ -501,16 +495,16 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
             Log.d(DEBUG_TAG, "start to build FacePassHandler");
             FacePassConfig config;
             try {
-              /* 填入所需要的模型配置 */
+              /* Fill in the required model configuration */
               config = new FacePassConfig();
               config.poseBlurModel = FacePassModel.initModel(getApplicationContext().getAssets(), "attr.pose_blur.arm.190630.bin");
 
               config.livenessModel = FacePassModel.initModel(getApplicationContext().getAssets(), "liveness.CPU.rgb.G.bin");
               if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
                 config.rgbIrLivenessModel = FacePassModel.initModel(getApplicationContext().getAssets(), "liveness.CPU.rgbir.I.bin");
-                // 真假人同屏模型
+                // Real and fake models on the same screen
                 config.rgbIrGaLivenessModel = FacePassModel.initModel(getApplicationContext().getAssets(), "liveness.CPU.rgbir.ga_case.A.bin");
-                // 若需要使用GPU模型则加载以下模型文件
+                // If you need to use the GPU model, load the following model files
                 config.livenessGPUCache = FacePassModel.initModel(getApplicationContext().getAssets(), "liveness.GPU.rgbir.I.cache");
                 config.rgbIrLivenessGpuModel = FacePassModel.initModel(getApplicationContext().getAssets(), "liveness.GPU.rgbir.I.bin");
                 config.rgbIrGaLivenessGpuModel = FacePassModel.initModel(getApplicationContext().getAssets(), "liveness.GPU.rgbir.ga_case.A.bin");
@@ -526,17 +520,17 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
               config.occlusionFilterModel = FacePassModel.initModel(getApplicationContext().getAssets(), "attr.occlusion.arm.20201209.bin");
               //config.smileModel = FacePassModel.initModel(getApplicationContext().getAssets(), "attr.RC.arm.200815.bin");
 
-              /* 送识别阈值参数 */
+              /* Send recognition threshold parameters */
               config.rcAttributeAndOcclusionMode = 1;
               config.searchThreshold = 65f;
               config.livenessThreshold = 80f;
               config.livenessGaThreshold = 85f;
               if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
                 config.livenessEnabled = false;
-                config.rgbIrLivenessEnabled = true;      // 启用双目活体功能(默认CPU)
-                config.rgbIrLivenessGpuEnabled = true;   // 启用双目活体GPU功能
-                config.rgbIrGaLivenessEnabled = true;    // 启用真假人同屏功能(默认CPU)
-                config.rgbIrGaLivenessGpuEnabled = true; // 启用真假人同屏GPU功能
+                config.rgbIrLivenessEnabled = true;      // Enable binocular living function (default CPU)
+                config.rgbIrLivenessGpuEnabled = true;   // Enable binocular living GPU function
+                config.rgbIrGaLivenessEnabled = true;    // Enable the function of real and fake people on the same screen (default CPU)
+                config.rgbIrGaLivenessGpuEnabled = true; // Enable the GPU function of real and fake people on the same screen
               } else {
                 config.livenessEnabled = true;
                 config.rgbIrLivenessEnabled = false;
@@ -555,10 +549,10 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
               config.maxFaceEnabled = true;
               config.fileRootPath = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
 
-              /* 创建SDK实例 */
+              /* Create an SDK instance */
               mFacePassHandler = new FacePassHandler(config);
 
-              /* 入库阈值参数 */
+              /* Inbound Threshold Parameters */
               FacePassConfig addFaceConfig = mFacePassHandler.getAddFaceConfig();
               addFaceConfig.poseThreshold.pitch = 35f;
               addFaceConfig.poseThreshold.roll = 35f;
@@ -572,7 +566,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
               addFaceConfig.rcAttributeAndOcclusionMode = 2;
               mFacePassHandler.setAddFaceConfig(addFaceConfig);
 
-              checkGroup();
+              // checkGroup(groupName);
             } catch (FacePassException e) {
               e.printStackTrace();
               // Log.d(DEBUG_TAG, "FacePassHandler is null");
@@ -582,7 +576,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
             return;
           }
           try {
-            /* 如果SDK初始化未完成则需等待 */
+            /* If the SDK initialization is not completed, you need to wait */
             sleep(500);
           } catch (InterruptedException e) {
             e.printStackTrace();
@@ -596,7 +590,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
   // protected void onResume() {
   //   checkGroup();
   //   initToast();
-  //   /* 打开相机 */
+  //   /* Turn on the camera */
   //   if (hasPermission()) {
   //     manager.open(getWindowManager(), false, cameraWidth, cameraHeight);
   //     if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
@@ -607,9 +601,9 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
   //   super.onResume();
   // }
 
-  private void checkGroup() {
+  private boolean checkGroup(String groupName) {
     if (mFacePassHandler == null) {
-      return;
+      return false;
     }
     try {
       String[] localGroups = mFacePassHandler.getLocalGroups();
@@ -618,26 +612,30 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         // faceView.post(new Runnable() {
         //   @Override
         //   public void run() {
-        //     toast("请创建" + group_name + "底库");
+        //     toast("please create" + group_name + "base library");
         //   }
         // });
-        return;
+        return false;
       }
       for (String group : localGroups) {
-        if (group_name.equals(group)) {
+        if (groupName.equals(group)) {
           isLocalGroupExist = true;
+          return true;
+          break;
         }
       }
       if (!isLocalGroupExist) {
         // faceView.post(new Runnable() {
         //   @Override
         //   public void run() {
-        //     toast("请创建" + group_name + "底库");
+        //     toast("please create" + group_name + "base library");
         //   }
         // });
+        return false;
       }
     } catch (FacePassException e) {
       e.printStackTrace();
+      return false;
     }
   }
 
@@ -651,38 +649,10 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
           continue;
         }
 
-        // Camera mCamera = Camera.open();
-        // try {
-        //     mCamera.setPreviewTexture(new SurfaceTexture(10));
-        // } catch (IOException e1) {
-        //     Log.e(DEBUG_TAG, e1.getMessage());
-        // }
+        /* Convert the camera preview frame to the frame format required by the SDK algorithm FacePassImage */
+        long startTime = System.currentTimeMillis(); // start time
 
-        // Camera.Parameters params = mCamera.getParameters();
-        // params.setPreviewSize(1280, 720);
-        // params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-        // //params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
-        // //params.setPictureFormat(ImageFormat.JPEG);
-        // params.setPreviewFormat(ImageFormat.NV21);
-        // mCamera.setParameters(params);
-        // mCamera.startPreview();
-        // mCamera.takePicture(null, null, null, new Camera.PictureCallback() {
-        //     @Override
-        //     public void onPictureTaken(byte[] data, Camera camera) {
-        //         Log.i(DEBUG_TAG, "picture-taken");
-        //         //cameraPreviewData = new CameraPreviewData(data, 640, 480,
-        //                 //previewDegreen, front););
-
-
-        //         CameraPreviewData cameraPreviewData = new CameraPreviewData(data, 1280,720, previewDegreen, front);
-        //         mFeedFrameQueue.offer(cameraPreviewData);
-        //     }
-        // });
-
-        /* 将相机预览帧转成SDK算法所需帧的格式 FacePassImage */
-        long startTime = System.currentTimeMillis(); //起始时间
-
-        /* 将每一帧FacePassImage 送入SDK算法， 并得到返回结果 */
+        /* Send each frame of FacePassImage into the SDK algorithm and get the returned result */
         FacePassDetectionResult detectionResult = null;
         try {
           if (CamType == FacePassCameraType.FACEPASS_DUALCAM) {
@@ -707,12 +677,6 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
               continue;
             }
 
-            // Log.d(DEBUG_TAG, "cameraPreviewData.nv21Data: "+ cameraPreviewData.nv21Data);
-            // Log.d(DEBUG_TAG, "cameraPreviewData.width: "+ cameraPreviewData.width);
-            // Log.d(DEBUG_TAG, "cameraPreviewData.height: "+ cameraPreviewData.height);
-            // Log.d(DEBUG_TAG, "cameraRotation: "+ cameraRotation);
-            // Log.d(DEBUG_TAG, "FacePassImageType.NV21: "+ FacePassImageType.NV21);
-
             FacePassImage imageRGB = new FacePassImage(cameraPreviewData.nv21Data, cameraPreviewData.width, cameraPreviewData.height, cameraRotation, FacePassImageType.NV21);
             detectionResult = mFacePassHandler.feedFrame(imageRGB);
           }
@@ -721,7 +685,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         }
 
         if (detectionResult == null || detectionResult.faceList.length == 0) {
-          /* 当前帧没有检出人脸 */
+          /* No face is detected in the current frame */
           // runOnUiThread(new Runnable() {
           //   @Override
           //   public void run() {
@@ -730,7 +694,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
           //   }
           // });
         } else {
-          /* 将识别到的人脸在预览界面中圈出，并在上方显示人脸位置及角度信息 */
+          /* Circle the recognized face in the preview interface, and display the face position and angle information on the top */
           final FacePassFace[] bufferFaceList = detectionResult.faceList;
           // runOnUiThread(new Runnable() {
           //   @Override
@@ -741,11 +705,11 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         }
 
         if (SDK_MODE == FacePassSDKMode.MODE_OFFLINE) {
-          /*离线模式，将识别到人脸的，message不为空的result添加到处理队列中*/
+          /*In offline mode, add the result of the recognized face and the message is not empty to the processing queue*/
           if (detectionResult != null && detectionResult.message.length != 0) {
             Log.d(DEBUG_TAG, "detection result not null");
             Log.d(DEBUG_TAG, "mRecognizeDataQueue.offer");
-            /*所有检测到的人脸框的属性信息*/
+            /*Attribute information of all detected face frames*/
             for (int i = 0; i < detectionResult.faceList.length; ++i) {
               Log.d(DEBUG_TAG, String.format("rc attribute faceList hairType: 0x%x beardType: 0x%x hatType: 0x%x respiratorType: 0x%x glassesType: 0x%x skinColorType: 0x%x",
                 detectionResult.faceList[i].rcAttr.hairType.ordinal(),
@@ -757,7 +721,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
               );
             }
             Log.d(DEBUG_TAG, "--------------------------------------------------------------------------------------------------------------------------------------------------");
-            /*送识别的人脸框的属性信息*/
+            /*Send the attribute information of the recognized face frame*/
             FacePassTrackOptions[] trackOpts = new FacePassTrackOptions[detectionResult.images.length];
             for (int i = 0; i < detectionResult.images.length; ++i) {
               if (detectionResult.images[i].rcAttr.respiratorType != FacePassRCAttribute.FacePassRespiratorType.INVALID
@@ -781,7 +745,7 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
             mRecognizeDataQueue.offer(mRecData);
           }
         }
-        long endTime = System.currentTimeMillis(); //结束时间
+        long endTime = System.currentTimeMillis(); // End Time
         long runTime = endTime - startTime;
         for (int i = 0; i < detectionResult.faceList.length; ++i) {
           //Log.i(DEBUG_TAG, "rect[" + i + "] = (" + detectionResult.faceList[i].rect.left + ", " + detectionResult.faceList[i].rect.top + ", " + detectionResult.faceList[i].rect.right + ", " + detectionResult.faceList[i].rect.bottom);
@@ -795,6 +759,34 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
       isInterrupt = true;
       super.interrupt();
     }
+  }
+
+  public boolean createGroup(String groupName) {
+    if (mFacePassHandler == null) {
+      // toast("FacePassHandle is null ! ");
+      return false;
+    }
+
+    if (TextUtils.isEmpty(groupName)) {
+      // toast("please input group name ！");
+      return false;
+    }
+
+    boolean isSuccess = false;
+    if(!checkGroup(groupName)) {
+      try {
+        isSuccess = mFacePassHandler.createLocalGroup(groupName);
+        if (isSuccess) {
+          isLocalGroupExist = true;
+          return true;
+        }
+        return false;
+      } catch (FacePassException e) {
+        e.printStackTrace();
+        return false;
+      }
+    }
+    // toast("create group " + isSuccess);
   }
 
   int findidx(FacePassAgeGenderResult[] results, long trackId) {
@@ -820,12 +812,12 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         try {
           RecognizeData recognizeData = mRecognizeDataQueue.take();
           FacePassAgeGenderResult[] ageGenderResult = null;
-          //if (ageGenderEnabledGlobal) {
-          //    ageGenderResult = mFacePassHandler.getAgeGender(detectionResult);
-          //    for (FacePassAgeGenderResult t : ageGenderResult) {
-          //        Log.e("FacePassAgeGenderResult", "id " + t.trackId + " age " + t.age + " gender " + t.gender);
-          //    }
-          //}
+          // if (ageGenderEnabledGlobal) {
+          //     ageGenderResult = mFacePassHandler.getAgeGender(detectionResult);
+          //     for (FacePassAgeGenderResult t : ageGenderResult) {
+          //         Log.e("FacePassAgeGenderResult", "id " + t.trackId + " age " + t.age + " gender " + t.gender);
+          //     }
+          // }
 
           if (isLocalGroupExist) {
             Log.d(DEBUG_TAG, "RecognizeData >>>>");
@@ -844,10 +836,9 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
             //       result.rcAttr.glassesType.ordinal(),
             //       result.rcAttr.skinColorType.ordinal())
             //     );
-            //     }
+            //   }
             // }
 
-            //FacePassRecognitionResult[] recognizeResult = mFacePassHandler.recognize(group_name, recognizeData.message, recognizeData.trackOpt);
             FacePassRecognitionResult[][] recognizeResultArray = mFacePassHandler.recognize(group_name, recognizeData.message, 1, recognizeData.trackOpt);
             if (recognizeResultArray != null && recognizeResultArray.length > 0) {
               for (FacePassRecognitionResult[] recognizeResult : recognizeResultArray) {
@@ -898,44 +889,37 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     }
   }
 
-  private void showRecognizeResult(final long trackId, final float searchScore, final float livenessScore, final boolean isRecognizeOK) {
+  public void showRecognizeResult(final long trackId, final float searchScore, final float livenessScore, final boolean isRecognizeOK, final float age, final int gender) {
     mAndroidHandler.post(new Runnable() {
       @Override
       public void run() {
-        faceEndTextView.append("ID = " + trackId + (isRecognizeOK ? "识别成功" : "识别失败") + "\n");
-        faceEndTextView.append("识别分 = " + searchScore + "\n");
-        faceEndTextView.append("活体分 = " + livenessScore + "\n");
-        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-      }
-    });
-  }
+        faceEndTextView.append("Recognition Score = " + searchScore + "\n");
+        Log.d(DEBUG_TAG, "ID = " + trackId + (isRecognizeOK ? "Successful Recognition" : "Recognition Failed") + "\n");
 
-  private void showRecognizeResult(final long trackId, final float searchScore, final float livenessScore, final boolean isRecognizeOK, final float age, final int gender) {
-    mAndroidHandler.post(new Runnable() {
-      @Override
-      public void run() {
-        faceEndTextView.append("ID = " + trackId + (isRecognizeOK ? "识别成功" : "识别失败") + "\n");
-        faceEndTextView.append("识别分 = " + searchScore + "\n");
-        faceEndTextView.append("活体分 = " + livenessScore + "\n");
-        faceEndTextView.append("年龄 = " + age + "\n");
+        faceEndTextView.append("Living Body Fraction = " + livenessScore + "\n");
+        Log.d(DEBUG_TAG, "Living Body Fraction = " + livenessScore + "\n");
+
+        faceEndTextView.append("Age = " + age + "\n");
+        Log.d(DEBUG_TAG, "Age = " + age + "\n");
         if (gender == 0) {
-          faceEndTextView.append("性别 = " + "男" + "\n");
+          faceEndTextView.append("Gender = " + "male" + "\n");
+          Log.d(DEBUG_TAG, "Gender = " + "male" + "\n");
         } else if (gender == 1) {
-          faceEndTextView.append("性别 = " + "女" + "\n");
+          faceEndTextView.append("Gender = " + "female" + "\n");
+          Log.d(DEBUG_TAG, "Gender = " + "female" + "\n");
         } else {
-          faceEndTextView.append("性别 = " + "unknown" + "\n");
+          faceEndTextView.append("Gender = " + "unknown" + "\n");
+          Log.d(DEBUG_TAG, "Gender = " + "unknown" + "\n");
         }
         scrollView.fullScroll(ScrollView.FOCUS_DOWN);
       }
     });
   }
 
-  /* 判断程序是否有所需权限 android22以上需要自申请权限 */
+  /* Judging whether the program has the required permissions android22 and above need to apply for permissions */
   private boolean hasPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       return checkSelfPermission(PERMISSION_CAMERA) == PackageManager.PERMISSION_GRANTED &&
-        checkSelfPermission(PERMISSION_READ_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-        checkSelfPermission(PERMISSION_WRITE_STORAGE) == PackageManager.PERMISSION_GRANTED &&
         checkSelfPermission(PERMISSION_INTERNET) == PackageManager.PERMISSION_GRANTED &&
         checkSelfPermission(PERMISSION_ACCESS_NETWORK_STATE) == PackageManager.PERMISSION_GRANTED;
     } else {
@@ -943,39 +927,11 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
     }
   }
 
-  /* 请求程序所需权限 */
+  /* request program permissions */
   private void requestPermission() {
     Log.d(DEBUG_TAG, "requestPermission");
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       requestPermissions(Permission, PERMISSIONS_REQUEST);
-    }
-  }
-
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    if (requestCode == PERMISSIONS_REQUEST) {
-      boolean granted = true;
-      for (int result : grantResults) {
-        if (result != PackageManager.PERMISSION_GRANTED)
-          granted = false;
-      }
-      if (!granted) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-          if (!shouldShowRequestPermissionRationale(PERMISSION_CAMERA)
-            || !shouldShowRequestPermissionRationale(PERMISSION_READ_STORAGE)
-            || !shouldShowRequestPermissionRationale(PERMISSION_WRITE_STORAGE)
-            || !shouldShowRequestPermissionRationale(PERMISSION_INTERNET)
-            || !shouldShowRequestPermissionRationale(PERMISSION_ACCESS_NETWORK_STATE)) {
-            Toast.makeText(getApplicationContext(), "需要开启摄像头网络文件存储权限", Toast.LENGTH_SHORT).show();
-          }
-      } else {
-        try {
-          initFacePassSDK();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
     }
   }
 
@@ -991,12 +947,15 @@ public static final String CERT_PATH = "Download/CBG_Android_Face_Reco---30-Tria
         @Override
         public void run() {
           Log.i(DEBUG_TAG, "getFaceImageByFaceToken cache is null");
+          // Log.i(DEBUG_TAG, "ID = " + String.valueOf(trackId), Toast.LENGTH_SHORT, true, bitmap);
           // showToast("ID = " + String.valueOf(trackId), Toast.LENGTH_SHORT, true, bitmap);
         }
       });
+
       if (bitmap != null) {
         return;
       }
+
     } catch (FacePassException e) {
       e.printStackTrace();
     }
