@@ -3,6 +3,8 @@ import 'package:camera/camera.dart';
 import 'package:facepass/helpers/pass_face_data.dart';
 import 'package:get/state_manager.dart';
 
+import 'package:image/image.dart' as Img;
+
 import 'helpers/inititalizeAPK.dart';
 
 class ScanController extends GetxController {
@@ -70,6 +72,8 @@ class ScanController extends GetxController {
 
   void capture(CameraImage cameraImage) {
     //print(cameraImage.planes.length);
+    Img.Image image = Img.Image.fromBytes(width: cameraImage.width, height: cameraImage.height, bytes: cameraImage.planes[0].bytes, format: Img.Format.uint8);
+
     PassFaceData.call(channelName, cameraImage.planes[0].bytes,
         cameraImage.width, cameraImage.height);
   }

@@ -196,7 +196,9 @@ public class MainActivity extends FlutterActivity {
           case "passFaceData":
             byte[] byteData = (byte[]) args.get("byteData");
             int width = (int) args.get("width");
+            //int width = 1280;
             int height = (int) args.get("height");
+            //int height = 720;
 
             //mFeedFrameQueue.offer(new CameraPreviewData(byteData, width, height, previewDegreen, front));
             // try calling feed frame and recognize without using threads
@@ -695,7 +697,7 @@ public class MainActivity extends FlutterActivity {
       // Offline mode, add the result that recognizes the face and the message is not empty to the processing queue
       //if (detectionResult != null && detectionResult.faceList.length != 0) {
       if (detectionResult != null && detectionResult.message.length != 0) {
-      android.util.Log.d(DEBUG_TAG, "detectionResult.message: " + detectionResult.message);
+      android.util.Log.d(DEBUG_TAG, "detectionResult.message: " + detectionResult.message.length);
         Log.d(DEBUG_TAG, "mRecognizeDataQueue.offer");
         // Attribute information of all detected face frames
         for (int i = 0; i < detectionResult.faceList.length; ++i) {
